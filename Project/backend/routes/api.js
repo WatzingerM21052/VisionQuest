@@ -2,7 +2,10 @@ const express = require('express');
 const router = express.Router();
 const dbService = require('../services/dbService');
 const sessionService = require('../services/sessionService');
-const { sendError, handleCatchError, validateRegisterInput, validateLoginInput } = require('../services/authErrorHandler');
+const { sendError: authError, handleCatchError: authCatchError, validateRegisterInput, validateLoginInput } = require('../services/authErrorHandler');
+const { sendError: userError, handleCatchError: userCatchError } = require('../services/userErrorHandler');
+const { sendError: questError, handleCatchError: questCatchError, checkQuestOwnership } = require('../services/questErrorHandler');
+const { sendError: statsError, handleCatchError: statsCatchError } = require('../services/statsErrorHandler');
 const jwt = require('jsonwebtoken');
 
 // JWT Secret (sollte in .env stehen)
@@ -18,26 +21,26 @@ const authenticateToken = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
-        return sendError(res, 'NO_TOKEN');
+        return authError(res, 'NO_TOKEN');
     }
 
     // Token auf Blacklist prüfen
     if (sessionService.isTokenBlacklisted(token)) {
-        return sendError(res, 'TOKEN_REVOKED');
+        return authError(res, 'TOKEN_REVOKED');
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
             // Unterscheidung zwischen Token-Fehlern
             if (err.name === 'TokenExpiredError') {
-                return sendError(res, 'TOKEN_EXPIRED', { expiredAt: err.expiredAt });
+                return authError(res, 'TOKEN_EXPIRED', { expiredAt: err.expiredAt });
             }
 
             if (err.name === 'JsonWebTokenError') {
-                return sendError(res, 'INVALID_TOKEN');
+                return authError(res, 'INVALID_TOKEN');
             }
 
-            return sendError(res, 'INVALID_TOKEN');
+            return authError(res, 'INVALID_TOKEN');
         }
         req.user = user; // User-Daten aus Token speichern
         next();
@@ -57,7 +60,7 @@ router.post('/auth/register', async (req, res) => {
         // Input Validierung
         const validationErrors = validateRegisterInput(username, email, password);
         if (validationErrors.length > 0) {
-            return sendError(res, 'MISSING_FIELDS', { errors: validationErrors });
+            return authError(res, 'MISSING_FIELDS', { errors: validationErrors });
         }
 
         const result = await dbService.createUser(username, email, password);
@@ -86,7 +89,7 @@ router.post('/auth/register', async (req, res) => {
             }
         });
     } catch (error) {
-        handleCatchError(res, error, 'REGISTRATION_FAILED');
+        authCatchError(res, error, 'REGISTRATION_FAILED');
     }
 });
 
@@ -101,19 +104,19 @@ router.post('/auth/login', async (req, res) => {
         // Input Validierung
         const validationErrors = validateLoginInput(email, password);
         if (validationErrors.length > 0) {
-            return sendError(res, 'MISSING_FIELDS', { errors: validationErrors });
+            return authError(res, 'MISSING_FIELDS', { errors: validationErrors });
         }
 
         const user = await dbService.getUserByEmail(email);
 
         if (!user) {
-            return sendError(res, 'INVALID_CREDENTIALS');
+            return authError(res, 'INVALID_CREDENTIALS');
         }
 
         const isPasswordValid = await dbService.verifyPassword(password, user.password_hash);
 
         if (!isPasswordValid) {
-            return sendError(res, 'INVALID_CREDENTIALS');
+            return authError(res, 'INVALID_CREDENTIALS');
         }
 
         // JWT Token erstellen
@@ -144,7 +147,7 @@ router.post('/auth/login', async (req, res) => {
             }
         });
     } catch (error) {
-        handleCatchError(res, error, 'LOGIN_FAILED');
+        authCatchError(res, error, 'LOGIN_FAILED');
     }
 });
 
@@ -158,13 +161,13 @@ router.post('/auth/refresh', (req, res) => {
         const token = authHeader && authHeader.split(' ')[1];
 
         if (!token) {
-            return sendError(res, 'NO_TOKEN');
+            return authError(res, 'NO_TOKEN');
         }
 
         // Token verifizieren (auch wenn abgelaufen)
         jwt.verify(token, JWT_SECRET, { ignoreExpiration: true }, (err, user) => {
             if (err) {
-                return sendError(res, 'INVALID_TOKEN');
+                return authError(res, 'INVALID_TOKEN');
             }
 
             // Neuen Token erstellen
@@ -184,7 +187,7 @@ router.post('/auth/refresh', (req, res) => {
             });
         });
     } catch (error) {
-        handleCatchError(res, error, 'REFRESH_FAILED');
+        authCatchError(res, error, 'REFRESH_FAILED');
     }
 });
 
@@ -209,7 +212,7 @@ router.post('/auth/logout', authenticateToken, (req, res) => {
             }
         });
     } catch (error) {
-        handleCatchError(res, error, 'LOGOUT_FAILED');
+        authCatchError(res, error, 'LOGOUT_FAILED');
     }
 });
 
@@ -232,7 +235,7 @@ router.get('/auth/sessions', authenticateToken, (req, res) => {
             }
         });
     } catch (error) {
-        handleCatchError(res, error, 'SESSIONS_FAILED');
+        authCatchError(res, error, 'SESSIONS_FAILED');
     }
 });
 
@@ -248,13 +251,11 @@ router.get('/users/me', authenticateToken, async (req, res) => {
 
         res.json({
             success: true,
+            code: 'USER_RETRIEVED',
             data: user
         });
     } catch (error) {
-        res.status(404).json({
-            success: false,
-            message: error.message
-        });
+        userCatchError(res, error, 'GET_USER');
     }
 });
 
@@ -269,13 +270,11 @@ router.put('/users/me', authenticateToken, async (req, res) => {
 
         res.json({
             success: true,
+            code: 'USER_UPDATED',
             message: result.message
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        userCatchError(res, error, 'UPDATE_USER');
     }
 });
 
@@ -289,13 +288,11 @@ router.delete('/users/me', authenticateToken, async (req, res) => {
 
         res.json({
             success: true,
+            code: 'USER_DELETED',
             message: result.message
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        userCatchError(res, error, 'DELETE_USER');
     }
 });
 
@@ -312,14 +309,12 @@ router.post('/quests', authenticateToken, async (req, res) => {
 
         res.status(201).json({
             success: true,
+            code: 'QUEST_CREATED',
             message: result.message,
             data: result
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        questCatchError(res, error, 'CREATE_QUEST');
     }
 });
 
@@ -335,14 +330,12 @@ router.get('/quests', authenticateToken, async (req, res) => {
 
         res.json({
             success: true,
+            code: 'QUESTS_RETRIEVED',
             count: quests.length,
             data: quests
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        questCatchError(res, error, 'GET_QUESTS');
     }
 });
 
@@ -355,22 +348,17 @@ router.get('/quests/:id', authenticateToken, async (req, res) => {
         const quest = await dbService.getQuestById(req.params.id);
 
         // Sicherstellen, dass Quest dem User gehört
-        if (quest.user_id !== req.user.userId) {
-            return res.status(403).json({
-                success: false,
-                message: 'Nicht autorisiert'
-            });
+        if (!checkQuestOwnership(quest.user_id, req.user.userId)) {
+            return questError(res, 'QUEST_UNAUTHORIZED');
         }
 
         res.json({
             success: true,
+            code: 'QUEST_RETRIEVED',
             data: quest
         });
     } catch (error) {
-        res.status(404).json({
-            success: false,
-            message: error.message
-        });
+        questCatchError(res, error, 'GET_QUEST');
     }
 });
 
@@ -383,24 +371,19 @@ router.put('/quests/:id', authenticateToken, async (req, res) => {
         const quest = await dbService.getQuestById(req.params.id);
 
         // Sicherstellen, dass Quest dem User gehört
-        if (quest.user_id !== req.user.userId) {
-            return res.status(403).json({
-                success: false,
-                message: 'Nicht autorisiert'
-            });
+        if (!checkQuestOwnership(quest.user_id, req.user.userId)) {
+            return questError(res, 'QUEST_UNAUTHORIZED');
         }
 
         const result = await dbService.updateQuest(req.params.id, req.body);
 
         res.json({
             success: true,
+            code: 'QUEST_UPDATED',
             message: result.message
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        questCatchError(res, error, 'UPDATE_QUEST');
     }
 });
 
@@ -419,14 +402,12 @@ router.post('/quests/:id/complete', authenticateToken, async (req, res) => {
 
         res.json({
             success: true,
+            code: 'QUEST_COMPLETED',
             message: result.message,
             data: result
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        questCatchError(res, error, 'COMPLETE_QUEST');
     }
 });
 
@@ -439,24 +420,19 @@ router.delete('/quests/:id', authenticateToken, async (req, res) => {
         const quest = await dbService.getQuestById(req.params.id);
 
         // Sicherstellen, dass Quest dem User gehört
-        if (quest.user_id !== req.user.userId) {
-            return res.status(403).json({
-                success: false,
-                message: 'Nicht autorisiert'
-            });
+        if (!checkQuestOwnership(quest.user_id, req.user.userId)) {
+            return questError(res, 'QUEST_UNAUTHORIZED');
         }
 
         const result = await dbService.deleteQuest(req.params.id);
 
         res.json({
             success: true,
+            code: 'QUEST_DELETED',
             message: result.message
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        questCatchError(res, error, 'DELETE_QUEST');
     }
 });
 
@@ -473,13 +449,11 @@ router.put('/stats', authenticateToken, async (req, res) => {
 
         res.json({
             success: true,
+            code: 'STATS_UPDATED',
             message: result.message
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        statsCatchError(res, error, 'UPDATE_STATS');
     }
 });
 

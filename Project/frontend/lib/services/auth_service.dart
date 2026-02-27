@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class AuthException implements Exception {
@@ -52,6 +53,29 @@ class InMemoryTokenStorage implements TokenStorage {
   @override
   Future<void> clearToken() async {
     _token = null;
+  }
+}
+
+class SecureTokenStorage implements TokenStorage {
+  SecureTokenStorage({FlutterSecureStorage? storage})
+    : _storage = storage ?? const FlutterSecureStorage();
+
+  static const String _tokenKey = 'auth_token';
+  final FlutterSecureStorage _storage;
+
+  @override
+  Future<String?> readToken() async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> writeToken(String token) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> clearToken() async {
+    throw UnimplementedError();
   }
 }
 

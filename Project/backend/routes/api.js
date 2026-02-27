@@ -143,6 +143,54 @@ router.post('/auth/login', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/auth/refresh
+ * JWT Token erneuern (auch mit abgelaufenem Token)
+ */
+router.post('/auth/refresh', (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Kein Token vorhanden'
+            });
+        }
+
+        // Token verifizieren (auch wenn abgelaufen)
+        jwt.verify(token, JWT_SECRET, { ignoreExpiration: true }, (err, user) => {
+            if (err) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Token ungültig'
+                });
+            }
+
+            // Neuen Token erstellen
+            const newToken = jwt.sign(
+                { userId: user.userId, username: user.username },
+                JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            res.json({
+                success: true,
+                message: 'Token erneuert',
+                data: {
+                    token: newToken
+                }
+            });
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
 // ============ USER ROUTES ============
 
 /**

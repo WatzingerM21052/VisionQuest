@@ -48,7 +48,22 @@ const createUser = (username, email, password) => {
  */
 const getUserByEmail = (email) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM users WHERE email = ?`;
+        const sql = `
+            SELECT
+                id,
+                username,
+                email,
+                password_hash AS password_hash,
+                level,
+                xp,
+                streak_days,
+                last_quest_date,
+                theme,
+                created_at,
+                updated_at
+            FROM users
+            WHERE email = ?
+        `;
 
         db.get(sql, [email], (err, row) => {
             if (err) {

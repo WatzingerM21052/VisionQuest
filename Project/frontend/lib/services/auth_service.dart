@@ -41,17 +41,17 @@ class InMemoryTokenStorage implements TokenStorage {
 
   @override
   Future<String?> readToken() async {
-    throw UnimplementedError();
+    return _token;
   }
 
   @override
   Future<void> writeToken(String token) async {
-    throw UnimplementedError();
+    _token = token;
   }
 
   @override
   Future<void> clearToken() async {
-    throw UnimplementedError();
+    _token = null;
   }
 }
 
@@ -72,44 +72,111 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    throw UnimplementedError();
+    final response = await _client.post(
+      Uri.parse('$baseUrl/auth/register'),
+      headers: _jsonHeaders(),
+      body: jsonEncode({
+        'username': username,
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    return _handleAuthResponse(response, persistToken: true);
   }
 
   Future<AuthResponse> login({
     required String email,
     required String password,
   }) async {
-    throw UnimplementedError();
+    final response = await _client.post(
+      Uri.parse('$baseUrl/auth/login'),
+      headers: _jsonHeaders(),
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+
+    return _handleAuthResponse(response, persistToken: true);
   }
 
   Future<AuthResponse> refreshToken() async {
-    throw UnimplementedError();
+    final token = await _storage.readToken();
+    if (token == null) {
+      throw AuthException('Kein Token gespeichert', code: 'NO_TOKEN');
+    }
+
+    final response = await _client.post(
+      Uri.parse('$baseUrl/auth/refresh'),
+      headers: _authHeaders(token),
+    );
+
+    return _handleAuthResponse(response, persistToken: true);
   }
 
   Future<AuthResponse> logout() async {
-    throw UnimplementedError();
+    final token = await _storage.readToken();
+    if (token == null) {
+      throw AuthException('Kein Token gespeichert', code: 'NO_TOKEN');
+    }
+
+    final response = await _client.post(
+      Uri.parse('$baseUrl/auth/logout'),
+      headers: _authHeaders(token),
+    );
+
+    final result = _handleAuthResponse(response);
+    await _storage.clearToken();
+    return result;
   }
 
   Future<String?> getStoredToken() {
-    throw UnimplementedError();
+    return _storage.readToken();
   }
 
   Map<String, String> _jsonHeaders() {
-    throw UnimplementedError();
+    return const {'Content-Type': 'application/json'};
   }
 
   Map<String, String> _authHeaders(String token) {
-    throw UnimplementedError();
+    return {..._jsonHeaders(), 'Authorization': 'Bearer $token'};
   }
 
   AuthResponse _handleAuthResponse(
     http.Response response, {
     bool persistToken = false,
   }) {
-    throw UnimplementedError();
+    final Map<String, dynamic> payload = _tryDecode(response.body);
+    final success = response.statusCode >= 200 && response.statusCode < 300;
+    final message = payload['message']?.toString() ?? 'Unbekannte Antwort';
+    final code = payload['code']?.toString();
+    final data = payload['data'] as Map<String, dynamic>?;
+
+    final result = AuthResponse(
+      success: success,
+      message: message,
+      statusCode: response.statusCode,
+      code: code,
+      data: data,
+    );
+
+    if (success) {
+      if (persistToken && result.token != null) {
+        _storage.writeToken(result.token!);
+      }
+      return result;
+    }
+
+    throw AuthException(message, code: code);
   }
 
   Map<String, dynamic> _tryDecode(String body) {
-    throw UnimplementedError();
+    if (body.isEmpty) {
+      return {};
+    }
+
+    try {
+      return jsonDecode(body) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
+    }
   }
 }

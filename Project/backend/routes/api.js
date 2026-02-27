@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const dbService = require('../services/dbService');
 const sessionService = require('../services/sessionService');
+const { sendError, handleCatchError, validateRegisterInput, validateLoginInput } = require('../services/authErrorHandler');
 const jwt = require('jsonwebtoken');
 
 // JWT Secret (sollte in .env stehen)
@@ -17,47 +18,26 @@ const authenticateToken = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
-        return res.status(401).json({
-            success: false,
-            message: 'Nicht autorisiert - kein Token vorhanden',
-            code: 'NO_TOKEN'
-        });
+        return sendError(res, 'NO_TOKEN');
     }
 
     // Token auf Blacklist prüfen
     if (sessionService.isTokenBlacklisted(token)) {
-        return res.status(401).json({
-            success: false,
-            message: 'Token wurde widerrufen (Logout)',
-            code: 'TOKEN_REVOKED'
-        });
+        return sendError(res, 'TOKEN_REVOKED');
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
             // Unterscheidung zwischen Token-Fehlern
             if (err.name === 'TokenExpiredError') {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Token abgelaufen',
-                    code: 'TOKEN_EXPIRED',
-                    expiredAt: err.expiredAt
-                });
+                return sendError(res, 'TOKEN_EXPIRED', { expiredAt: err.expiredAt });
             }
 
             if (err.name === 'JsonWebTokenError') {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Token ungültig',
-                    code: 'INVALID_TOKEN'
-                });
+                return sendError(res, 'INVALID_TOKEN');
             }
 
-            return res.status(403).json({
-                success: false,
-                message: 'Token-Validierung fehlgeschlagen',
-                code: 'TOKEN_INVALID'
-            });
+            return sendError(res, 'INVALID_TOKEN');
         }
         req.user = user; // User-Daten aus Token speichern
         next();
@@ -74,19 +54,10 @@ router.post('/auth/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        // Validierung
-        if (!username || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Username, E-Mail und Passwort sind erforderlich'
-            });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: 'Passwort muss mindestens 6 Zeichen lang sein'
-            });
+        // Input Validierung
+        const validationErrors = validateRegisterInput(username, email, password);
+        if (validationErrors.length > 0) {
+            return sendError(res, 'MISSING_FIELDS', { errors: validationErrors });
         }
 
         const result = await dbService.createUser(username, email, password);
@@ -103,6 +74,7 @@ router.post('/auth/register', async (req, res) => {
 
         res.status(201).json({
             success: true,
+            code: 'REGISTRATION_SUCCESS',
             message: 'Registrierung erfolgreich',
             data: {
                 user: result,
@@ -114,10 +86,7 @@ router.post('/auth/register', async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        handleCatchError(res, error, 'REGISTRATION_FAILED');
     }
 });
 
@@ -129,29 +98,22 @@ router.post('/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'E-Mail und Passwort sind erforderlich'
-            });
+        // Input Validierung
+        const validationErrors = validateLoginInput(email, password);
+        if (validationErrors.length > 0) {
+            return sendError(res, 'MISSING_FIELDS', { errors: validationErrors });
         }
 
         const user = await dbService.getUserByEmail(email);
 
         if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Ungültige E-Mail oder Passwort'
-            });
+            return sendError(res, 'INVALID_CREDENTIALS');
         }
 
         const isPasswordValid = await dbService.verifyPassword(password, user.password_hash);
 
         if (!isPasswordValid) {
-            return res.status(401).json({
-                success: false,
-                message: 'Ungültige E-Mail oder Passwort'
-            });
+            return sendError(res, 'INVALID_CREDENTIALS');
         }
 
         // JWT Token erstellen
@@ -169,6 +131,7 @@ router.post('/auth/login', async (req, res) => {
 
         res.json({
             success: true,
+            code: 'LOGIN_SUCCESS',
             message: 'Login erfolgreich',
             data: {
                 user: userWithoutPassword,
@@ -181,10 +144,7 @@ router.post('/auth/login', async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        handleCatchError(res, error, 'LOGIN_FAILED');
     }
 });
 
@@ -198,19 +158,13 @@ router.post('/auth/refresh', (req, res) => {
         const token = authHeader && authHeader.split(' ')[1];
 
         if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'Kein Token vorhanden'
-            });
+            return sendError(res, 'NO_TOKEN');
         }
 
         // Token verifizieren (auch wenn abgelaufen)
         jwt.verify(token, JWT_SECRET, { ignoreExpiration: true }, (err, user) => {
             if (err) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Token ungültig'
-                });
+                return sendError(res, 'INVALID_TOKEN');
             }
 
             // Neuen Token erstellen
@@ -222,6 +176,7 @@ router.post('/auth/refresh', (req, res) => {
 
             res.json({
                 success: true,
+                code: 'TOKEN_REFRESHED',
                 message: 'Token erneuert',
                 data: {
                     token: newToken
@@ -229,10 +184,7 @@ router.post('/auth/refresh', (req, res) => {
             });
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        handleCatchError(res, error, 'REFRESH_FAILED');
     }
 });
 
@@ -250,13 +202,14 @@ router.post('/auth/logout', authenticateToken, (req, res) => {
 
         res.json({
             success: true,
-            message: 'Logout erfolgreich'
+            code: 'LOGOUT_SUCCESS',
+            message: 'Logout erfolgreich',
+            data: {
+                userId: req.user.userId
+            }
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        handleCatchError(res, error, 'LOGOUT_FAILED');
     }
 });
 
@@ -271,17 +224,15 @@ router.get('/auth/sessions', authenticateToken, (req, res) => {
 
         res.json({
             success: true,
-            message: 'aktive Sessions abgerufen',
+            code: 'SESSIONS_RETRIEVED',
+            message: 'Aktive Sessions abgerufen',
             data: {
                 sessions: sessions,
                 totalSessions: sessions.length
             }
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        handleCatchError(res, error, 'SESSIONS_FAILED');
     }
 });
 

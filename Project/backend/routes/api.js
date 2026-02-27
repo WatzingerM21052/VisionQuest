@@ -6,10 +6,17 @@ const { sendError: authError, handleCatchError: authCatchError, validateRegister
 const { sendError: userError, handleCatchError: userCatchError } = require('../services/userErrorHandler');
 const { sendError: questError, handleCatchError: questCatchError, checkQuestOwnership } = require('../services/questErrorHandler');
 const { sendError: statsError, handleCatchError: statsCatchError } = require('../services/statsErrorHandler');
+const visionService = require('../services/visionService');
+const multer = require('multer');
 const jwt = require('jsonwebtoken');
 
 // JWT Secret (sollte in .env stehen)
 const JWT_SECRET = process.env.JWT_SECRET || 'dein_geheimes_jwt_secret_key';
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }
+});
 
 // ============ AUTH MIDDLEWARE ============
 
@@ -213,6 +220,41 @@ router.post('/auth/logout', authenticateToken, (req, res) => {
         });
     } catch (error) {
         authCatchError(res, error, 'LOGOUT_FAILED');
+    }
+});
+
+// ============ VISION ROUTES ============
+
+/**
+ * POST /api/vision/detect
+ * Bild hochladen und Objekt erkennen
+ */
+router.post('/vision/detect', authenticateToken, upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                code: 'IMAGE_MISSING',
+                message: 'Kein Bild hochgeladen'
+            });
+        }
+
+        const result = await visionService.detectImage(req.file.buffer);
+
+        res.json({
+            success: true,
+            code: 'DETECTION_SUCCESS',
+            message: 'Objekt erkannt',
+            data: result
+        });
+    } catch (error) {
+        console.error('[VISION ERROR]:', error.message);
+        res.status(500).json({
+            success: false,
+            code: 'DETECTION_FAILED',
+            message: 'Objekt-Erkennung fehlgeschlagen',
+            details: error.message
+        });
     }
 });
 

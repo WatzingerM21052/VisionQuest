@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'scanner_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -95,6 +96,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text('Logout'),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ScannerScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: const Text('Scanner starten'),
                 ),
               ],
             ),

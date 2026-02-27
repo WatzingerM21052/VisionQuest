@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dein_geheimes_jwt_secret_key';
 // ============ AUTH MIDDLEWARE ============
 
 /**
- * Middleware: JWT Token verifizieren
+ * Middleware: JWT Token verifizieren mit detailliertem Error-Handling
  */
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -18,18 +18,38 @@ const authenticateToken = (req, res, next) => {
     if (!token) {
         return res.status(401).json({
             success: false,
-            message: 'Nicht autorisiert - kein Token vorhanden'
+            message: 'Nicht autorisiert - kein Token vorhanden',
+            code: 'NO_TOKEN'
         });
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
+            // Unterscheidung zwischen Token-Fehlern
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Token abgelaufen',
+                    code: 'TOKEN_EXPIRED',
+                    expiredAt: err.expiredAt
+                });
+            }
+            
+            if (err.name === 'JsonWebTokenError') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Token ungültig',
+                    code: 'INVALID_TOKEN'
+                });
+            }
+
             return res.status(403).json({
                 success: false,
-                message: 'Token ungültig oder abgelaufen'
+                message: 'Token-Validierung fehlgeschlagen',
+                code: 'TOKEN_INVALID'
             });
         }
-        req.user = user; // User-ID aus Token in Request speichern
+        req.user = user; // User-Daten aus Token speichern
         next();
     });
 };

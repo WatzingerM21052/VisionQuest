@@ -62,6 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Image.asset(
+                  'assets/Startlogo.png',
+                  height: 160,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 16),
                 Text(
                   'Login erfolgreich',
                   style: theme.textTheme.headlineMedium,

@@ -106,7 +106,7 @@ class AuthService {
       }),
     );
 
-    return _handleAuthResponse(response, persistToken: true);
+    return await _handleAuthResponse(response, persistToken: true);
   }
 
   Future<AuthResponse> login({
@@ -119,7 +119,7 @@ class AuthService {
       body: jsonEncode({'email': email, 'password': password}),
     );
 
-    return _handleAuthResponse(response, persistToken: true);
+    return await _handleAuthResponse(response, persistToken: true);
   }
 
   Future<AuthResponse> refreshToken() async {
@@ -133,7 +133,7 @@ class AuthService {
       headers: _authHeaders(token),
     );
 
-    return _handleAuthResponse(response, persistToken: true);
+    return await _handleAuthResponse(response, persistToken: true);
   }
 
   Future<AuthResponse> logout() async {
@@ -147,7 +147,7 @@ class AuthService {
       headers: _authHeaders(token),
     );
 
-    final result = _handleAuthResponse(response);
+    final result = await _handleAuthResponse(response);
     await _storage.clearToken();
     return result;
   }
@@ -164,10 +164,10 @@ class AuthService {
     return {..._jsonHeaders(), 'Authorization': 'Bearer $token'};
   }
 
-  AuthResponse _handleAuthResponse(
+  Future<AuthResponse> _handleAuthResponse(
     http.Response response, {
     bool persistToken = false,
-  }) {
+  }) async {
     final Map<String, dynamic> payload = _tryDecode(response.body);
     final success = response.statusCode >= 200 && response.statusCode < 300;
     final message = payload['message']?.toString() ?? 'Unbekannte Antwort';
@@ -184,7 +184,7 @@ class AuthService {
 
     if (success) {
       if (persistToken && result.token != null) {
-        _storage.writeToken(result.token!);
+        await _storage.writeToken(result.token!);
       }
       return result;
     }

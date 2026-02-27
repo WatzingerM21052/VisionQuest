@@ -393,7 +393,7 @@ router.put('/quests/:id', authenticateToken, async (req, res) => {
  */
 router.post('/quests/:id/complete', authenticateToken, async (req, res) => {
     try {
-        const { detected_object } = req.body;
+        const { detected_object } = req.body || {};
         const result = await dbService.completeQuest(
             req.params.id,
             req.user.userId,

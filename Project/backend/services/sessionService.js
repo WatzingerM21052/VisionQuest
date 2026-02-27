@@ -75,11 +75,20 @@ function getSessionStats() {
     };
 }
 
+/**
+ * Test-Helfer: internen Zustand leeren
+ */
+function resetState() {
+    tokenBlacklist.clear();
+    activeSessions.clear();
+}
+
 module.exports = {
     createSession,
     invalidateToken,
     isTokenBlacklisted,
     invalidateUserSessions,
     getUserSessions,
-    getSessionStats
+    getSessionStats,
+    resetState
 };

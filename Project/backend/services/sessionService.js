@@ -17,20 +17,20 @@ function createSession(userId, token) {
     if (!activeSessions.has(userId)) {
         activeSessions.set(userId, []);
     }
-    
+
     const session = {
         token: token.substring(0, 20) + '...', // Token Snippet für Logging
         createdAt: new Date(),
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Tage
     };
-    
+
     activeSessions.get(userId).push(session);
-    
+
     // Max 5 Sessions pro User
     if (activeSessions.get(userId).length > 5) {
         activeSessions.get(userId).shift();
     }
-    
+
     return session;
 }
 

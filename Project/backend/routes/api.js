@@ -98,12 +98,19 @@ router.post('/auth/register', async (req, res) => {
             { expiresIn: '7d' }
         );
 
+        // Session erstellen
+        const session = sessionService.createSession(result.id, token);
+
         res.status(201).json({
             success: true,
             message: 'Registrierung erfolgreich',
             data: {
                 user: result,
-                token
+                token,
+                session: {
+                    createdAt: session.createdAt,
+                    expiresAt: session.expiresAt
+                }
             }
         });
     } catch (error) {
@@ -154,6 +161,9 @@ router.post('/auth/login', async (req, res) => {
             { expiresIn: '7d' }
         );
 
+        // Session erstellen
+        const session = sessionService.createSession(user.id, token);
+
         // Passwort-Hash aus Response entfernen
         const { password_hash, ...userWithoutPassword } = user;
 
@@ -162,7 +172,12 @@ router.post('/auth/login', async (req, res) => {
             message: 'Login erfolgreich',
             data: {
                 user: userWithoutPassword,
-                token
+                token,
+                session: {
+                    createdAt: session.createdAt,
+                    expiresAt: session.expiresAt,
+                    totalActiveSessions: sessionService.getUserSessions(user.id).length
+                }
             }
         });
     } catch (error) {
@@ -236,6 +251,31 @@ router.post('/auth/logout', authenticateToken, (req, res) => {
         res.json({
             success: true,
             message: 'Logout erfolgreich'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/auth/sessions
+ * Aktive Sessions des Users abrufen
+ */
+router.get('/auth/sessions', authenticateToken, (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const sessions = sessionService.getUserSessions(userId);
+
+        res.json({
+            success: true,
+            message: 'aktive Sessions abgerufen',
+            data: {
+                sessions: sessions,
+                totalSessions: sessions.length
+            }
         });
     } catch (error) {
         res.status(500).json({

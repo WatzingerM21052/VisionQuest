@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const dbService = require('../services/dbService');
+const sessionService = require('../services/sessionService');
 const jwt = require('jsonwebtoken');
 
 // JWT Secret (sollte in .env stehen)
@@ -23,6 +24,15 @@ const authenticateToken = (req, res, next) => {
         });
     }
 
+    // Token auf Blacklist prüfen
+    if (sessionService.isTokenBlacklisted(token)) {
+        return res.status(401).json({
+            success: false,
+            message: 'Token wurde widerrufen (Logout)',
+            code: 'TOKEN_REVOKED'
+        });
+    }
+
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
             // Unterscheidung zwischen Token-Fehlern
@@ -34,7 +44,7 @@ const authenticateToken = (req, res, next) => {
                     expiredAt: err.expiredAt
                 });
             }
-            
+
             if (err.name === 'JsonWebTokenError') {
                 return res.status(403).json({
                     success: false,
@@ -202,6 +212,30 @@ router.post('/auth/refresh', (req, res) => {
                     token: newToken
                 }
             });
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/auth/logout
+ * User-Logout (Token auf Blacklist)
+ */
+router.post('/auth/logout', authenticateToken, (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        // Token auf Blacklist setzen
+        sessionService.invalidateToken(token);
+
+        res.json({
+            success: true,
+            message: 'Logout erfolgreich'
         });
     } catch (error) {
         res.status(500).json({

@@ -65,17 +65,17 @@ class SecureTokenStorage implements TokenStorage {
 
   @override
   Future<String?> readToken() async {
-    throw UnimplementedError();
+    return _storage.read(key: _tokenKey);
   }
 
   @override
   Future<void> writeToken(String token) async {
-    throw UnimplementedError();
+    await _storage.write(key: _tokenKey, value: token);
   }
 
   @override
   Future<void> clearToken() async {
-    throw UnimplementedError();
+    await _storage.delete(key: _tokenKey);
   }
 }
 
@@ -85,7 +85,7 @@ class AuthService {
     http.Client? client,
     TokenStorage? storage,
   }) : _client = client ?? http.Client(),
-       _storage = storage ?? InMemoryTokenStorage();
+       _storage = storage ?? SecureTokenStorage();
 
   final String baseUrl;
   final http.Client _client;

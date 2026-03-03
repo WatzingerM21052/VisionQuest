@@ -22,7 +22,9 @@ class VisionQuestApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedTheme = ref.watch(appStateProvider.select((state) => state.theme));
+    final selectedTheme = ref.watch(
+      appStateProvider.select((state) => state.theme),
+    );
 
     return MaterialApp(
       title: 'VisionQuest',
@@ -30,27 +32,54 @@ class VisionQuestApp extends ConsumerWidget {
       darkTheme: AppThemes.darkThemeFor(selectedTheme),
       themeMode: AppThemes.themeModeFor(selectedTheme),
       initialRoute: AppRoutes.login,
-      routes: {
-        AppRoutes.login: (context) => const LoginScreen(),
-        AppRoutes.register: (context) => const RegisterScreen(),
-        AppRoutes.home: (context) => const HomeScreen(),
-        AppRoutes.scanner: (context) => const ScannerScreen(),
-        AppRoutes.questLog: (context) => const QuestLogScreen(),
-        AppRoutes.settings: (context) => const SettingsScreen(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == AppRoutes.reward) {
-          final args = settings.arguments;
-          if (args is VisionResult) {
-            return MaterialPageRoute(
-              builder: (context) => RewardScreen(result: args),
-            );
-          }
-        }
+      onGenerateRoute: _buildAnimatedRoute,
+    );
+  }
 
-        return MaterialPageRoute(builder: (context) => const LoginScreen());
+  Route<dynamic> _buildAnimatedRoute(RouteSettings settings) {
+    Widget page;
+
+    switch (settings.name) {
+      case AppRoutes.login:
+        page = const LoginScreen();
+      case AppRoutes.register:
+        page = const RegisterScreen();
+      case AppRoutes.home:
+        page = const HomeScreen();
+      case AppRoutes.scanner:
+        page = const ScannerScreen();
+      case AppRoutes.questLog:
+        page = const QuestLogScreen();
+      case AppRoutes.settings:
+        page = const SettingsScreen();
+      case AppRoutes.reward:
+        final args = settings.arguments;
+        if (args is VisionResult) {
+          page = RewardScreen(result: args);
+        } else {
+          page = const LoginScreen();
+        }
+      default:
+        page = const LoginScreen();
+    }
+
+    return PageRouteBuilder(
+      settings: settings,
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        // Slide transition from right for all routes
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
+
+        return SlideTransition(position: animation.drive(tween), child: child);
       },
+      transitionDuration: const Duration(milliseconds: 400),
     );
   }
 }
-

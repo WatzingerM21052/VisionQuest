@@ -129,6 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Bitte E-Mail eingeben.';
@@ -164,6 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       obscureText: !_showPassword,
+                      autofillHints: const [AutofillHints.password],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Bitte Passwort eingeben.';

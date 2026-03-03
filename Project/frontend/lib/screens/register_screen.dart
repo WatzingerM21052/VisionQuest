@@ -133,6 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
+                      autofillHints: const [AutofillHints.username],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Bitte Benutzername eingeben.';
@@ -156,6 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Bitte E-Mail eingeben.';
@@ -191,6 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       obscureText: !_showPassword,
+                      autofillHints: const [AutofillHints.password],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Bitte Passwort eingeben.';
@@ -226,6 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       obscureText: !_showConfirm,
+                      autofillHints: const [AutofillHints.password],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Bitte Passwort bestätigen.';

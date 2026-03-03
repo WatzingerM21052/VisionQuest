@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../app_routes.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
-import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -52,9 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result.message)));
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on AuthException catch (error) {
       setState(() {
         _errorMessage = error.message;
@@ -259,11 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const RegisterScreen(),
-                              ),
-                            );
+                            Navigator.of(context).pushNamed(AppRoutes.register);
                           },
                           child: Text(
                             'Jetzt registrieren',

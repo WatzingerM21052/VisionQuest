@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../app_routes.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -57,9 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result.message)));
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on AuthException catch (error) {
       setState(() {
         _errorMessage = error.message;

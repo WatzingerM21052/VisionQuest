@@ -1,9 +1,9 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
+import '../app_routes.dart';
 import '../services/auth_service.dart';
 import '../services/vision_service.dart';
-import 'reward_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -94,11 +94,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
         return;
       }
 
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => RewardScreen(result: result),
-        ),
-      );
+      await Navigator.of(
+        context,
+      ).pushNamed(AppRoutes.reward, arguments: result);
     } on VisionException catch (error) {
       setState(() {
         _errorMessage = error.message;

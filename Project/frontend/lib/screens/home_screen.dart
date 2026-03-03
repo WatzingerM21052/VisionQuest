@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../app_routes.dart';
 import '../services/auth_service.dart';
-import 'login_screen.dart';
-import 'scanner_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,10 +28,9 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     } on AuthException catch (error) {
       setState(() {
         _errorMessage = error.message;
@@ -320,11 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: _isLoading
                     ? null
                     : () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const ScannerScreen(),
-                          ),
-                        );
+                        Navigator.of(context).pushNamed(AppRoutes.scanner);
                       },
                 icon: const Icon(Icons.camera_alt),
                 label: const Text('Scanner starten'),
@@ -340,7 +334,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).pushNamed(AppRoutes.questLog);
+                      },
                       icon: const Icon(Icons.history),
                       label: const Text('Quest-Log'),
                     ),
@@ -348,7 +344,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).pushNamed(AppRoutes.settings);
+                      },
                       icon: const Icon(Icons.settings),
                       label: const Text('Einstellungen'),
                     ),

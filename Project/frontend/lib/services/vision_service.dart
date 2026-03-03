@@ -47,6 +47,10 @@ class VisionService {
     required String token,
   }) async {
     final bytes = await image.readAsBytes();
+    final fileName = image.name.isNotEmpty ? image.name : 'image.jpg';
+    print(
+      '[VISION_CLIENT] Sending image: $fileName, size: ${bytes.length} bytes',
+    );
 
     final request = http.MultipartRequest(
       'POST',
@@ -54,23 +58,31 @@ class VisionService {
     );
     request.headers['Authorization'] = 'Bearer $token';
     request.files.add(
-      http.MultipartFile.fromBytes('image', bytes, filename: image.name),
+      http.MultipartFile.fromBytes('image', bytes, filename: fileName),
     );
 
-    final response = await http.Response.fromStream(
-      await _client.send(request),
-    );
+    try {
+      final response = await http.Response.fromStream(
+        await _client.send(request),
+      );
 
-    final payload = _tryDecode(response.body);
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      final data = payload['data'] as Map<String, dynamic>? ?? {};
-      return VisionResult.fromJson(data);
+      print('[VISION_CLIENT] Response status: ${response.statusCode}');
+      print('[VISION_CLIENT] Response body: ${response.body}');
+
+      final payload = _tryDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = payload['data'] as Map<String, dynamic>? ?? {};
+        return VisionResult.fromJson(data);
+      }
+
+      throw VisionException(
+        payload['message']?.toString() ?? 'Erkennung fehlgeschlagen',
+        code: payload['code']?.toString(),
+      );
+    } catch (e) {
+      print('[VISION_CLIENT] Error: $e');
+      rethrow;
     }
-
-    throw VisionException(
-      payload['message']?.toString() ?? 'Erkennung fehlgeschlagen',
-      code: payload['code']?.toString(),
-    );
   }
 
   Map<String, dynamic> _tryDecode(String body) {

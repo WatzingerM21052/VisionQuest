@@ -231,7 +231,16 @@ router.post('/auth/logout', authenticateToken, (req, res) => {
  */
 router.post('/vision/detect', authenticateToken, upload.single('image'), async (req, res) => {
     try {
+        console.log('[VISION] Request received', {
+            hasFile: !!req.file,
+            fileSize: req.file?.size,
+            fileName: req.file?.originalname,
+            contentType: req.headers['content-type'],
+            authHeader: !!req.headers['authorization']
+        });
+
         if (!req.file) {
+            console.error('[VISION] No file received. Headers:', req.headers);
             return res.status(400).json({
                 success: false,
                 code: 'IMAGE_MISSING',
@@ -240,6 +249,12 @@ router.post('/vision/detect', authenticateToken, upload.single('image'), async (
         }
 
         const result = await visionService.detectImage(req.file.buffer);
+
+        console.log('[VISION] Detection result:', {
+            label: result.label,
+            confidence: result.confidence,
+            hasError: !!result.error
+        });
 
         res.json({
             success: true,

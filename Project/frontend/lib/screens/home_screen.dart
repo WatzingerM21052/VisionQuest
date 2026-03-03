@@ -12,10 +12,32 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with SingleTickerProviderStateMixin {
   final _authService = AuthService();
   bool _isLoading = false;
   String? _errorMessage;
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleLogout() async {
     setState(() {
@@ -54,12 +76,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final progress = ref.watch(appStateProvider.select((state) => state.progress));
-    final logEntries = ref.watch(appStateProvider.select((state) => state.logEntries));
+    final progress = ref.watch(
+      appStateProvider.select((state) => state.progress),
+    );
+    final logEntries = ref.watch(
+      appStateProvider.select((state) => state.logEntries),
+    );
     final today = DateTime.now();
     final foundToday = logEntries.where((entry) {
       final t = entry.timestamp;
-      return t.year == today.year && t.month == today.month && t.day == today.day;
+      return t.year == today.year &&
+          t.month == today.month &&
+          t.day == today.day;
     }).length;
     final dailyTarget = 5;
 
@@ -78,7 +106,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
-            final contentWidth = width > 1200 ? 1040.0 : (width > 900 ? 820.0 : 640.0);
+            final contentWidth = width > 1200
+                ? 1040.0
+                : (width > 900 ? 820.0 : 640.0);
 
             return Center(
               child: ConstrainedBox(
@@ -88,296 +118,361 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-              // Header Section with Logo
-              Align(
-                alignment: Alignment.center,
-                child: Image.asset(
-                  'assets/Startlogo.png',
-                  height: 120,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Welcome Section
-              Text(
-                'Willkommen zurück!',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  color: colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Dein nächstes Abenteuer wartet...',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '🔥 Streak: ${progress.streak} Tag${progress.streak == 1 ? '' : 'e'}',
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: colorScheme.secondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // User Profile Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [colorScheme.primary, colorScheme.secondary],
-                              ),
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.person,
-                                size: 28,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Spieler',
-                                  style: theme.textTheme.titleMedium,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Stufe ${progress.level}',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                      // Header Section with Logo
+                      Align(
+                        alignment: Alignment.center,
+                        child: Image.asset(
+                          'assets/Startlogo.png',
+                          height: 120,
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      // XP Progress Bar
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      const SizedBox(height: 24),
+
+                      // Welcome Section
+                      Text(
+                        'Willkommen zurück!',
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Dein nächstes Abenteuer wartet...',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Animated Streak Counter
+                      ScaleTransition(
+                        scale: _pulseAnimation,
+                        child: Text(
+                          '🔥 Streak: ${progress.streak} Tag${progress.streak == 1 ? '' : 'e'}',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.secondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // User Profile Card
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Erfahrungspunkte',
-                                style: theme.textTheme.labelLarge,
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 56,
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          colorScheme.primary,
+                                          colorScheme.secondary,
+                                        ],
+                                      ),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 28,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Spieler',
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Stufe ${progress.level}',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                '${progress.totalXp} / ${progress.nextLevelXp}',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
+                              const SizedBox(height: 16),
+                              // XP Progress Bar
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Erfahrungspunkte',
+                                        style: theme.textTheme.labelLarge,
+                                      ),
+                                      Text(
+                                        '${progress.totalXp} / ${progress.nextLevelXp}',
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // XP Bar with subtle shadow
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: colorScheme.primary.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: LinearProgressIndicator(
+                                        value: progress.levelProgress,
+                                        minHeight: 8,
+                                        backgroundColor:
+                                            colorScheme.surfaceContainerHighest,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              colorScheme.primary,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Quest Card
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.emoji_objects,
+                                      size: 28,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Heute\'s Quest',
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                color: colorScheme.primary,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Finde geheime Objekte und verdiene Punkte!',
+                                          style: theme.textTheme.bodySmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              // Daily Quest Progress
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.tertiaryContainer,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: foundToday >= dailyTarget
+                                      ? [
+                                          BoxShadow(
+                                            color: colorScheme.tertiary
+                                                .withValues(alpha: 0.4),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle,
+                                      size: 16,
+                                      color: colorScheme.onTertiaryContainer,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Objekte zu finden: $foundToday / $dailyTarget',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color:
+                                                colorScheme.onTertiaryContainer,
+                                          ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: LinearProgressIndicator(
-                              value: progress.levelProgress,
-                              minHeight: 8,
-                              backgroundColor: colorScheme.surfaceContainerHighest,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                colorScheme.primary,
-                              ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Stats Grid
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              theme,
+                              colorScheme,
+                              icon: Icons.camera_alt,
+                              label: 'Gescannt',
+                              value: '${logEntries.length}',
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              theme,
+                              colorScheme,
+                              icon: Icons.check_circle,
+                              label: 'Gefunden',
+                              value: '${logEntries.length}',
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              theme,
+                              colorScheme,
+                              icon: Icons.star,
+                              label: 'Punkte',
+                              value: '${progress.totalXp}',
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-              // Quest Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
+                      // Error Message
+                      if (_errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(8),
+                              color: colorScheme.errorContainer,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(
-                              Icons.emoji_objects,
-                              size: 28,
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text(
-                                  'Heute\'s Quest',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: colorScheme.primary,
-                                  ),
+                                Icon(
+                                  Icons.error_outline,
+                                  color: colorScheme.error,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Finde geheime Objekte und verdiene Punkte!',
-                                  style: theme.textTheme.bodySmall,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.error,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
+                        ),
+
+                      // Main CTA Button
+                      FilledButton.icon(
+                        onPressed: _isLoading
+                            ? null
+                            : () {
+                                Navigator.of(
+                                  context,
+                                ).pushNamed(AppRoutes.scanner);
+                              },
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Scanner starten'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
                       ),
+
                       const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.tertiaryContainer,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Objekte zu finden: $foundToday / $dailyTarget',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onTertiaryContainer,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
 
-              // Stats Grid
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      theme,
-                      colorScheme,
-                      icon: Icons.camera_alt,
-                      label: 'Gescannt',
-                      value: '${logEntries.length}',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      theme,
-                      colorScheme,
-                      icon: Icons.check_circle,
-                      label: 'Gefunden',
-                      value: '${logEntries.length}',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      theme,
-                      colorScheme,
-                      icon: Icons.star,
-                      label: 'Punkte',
-                      value: '${progress.totalXp}',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Error Message
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: colorScheme.error),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.error,
+                      // Secondary Actions
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.of(
+                                  context,
+                                ).pushNamed(AppRoutes.questLog);
+                              },
+                              icon: const Icon(Icons.history),
+                              label: const Text('Quest-Log'),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-              // Main CTA Button
-              FilledButton.icon(
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                        Navigator.of(context).pushNamed(AppRoutes.scanner);
-                      },
-                icon: const Icon(Icons.camera_alt),
-                label: const Text('Scanner starten'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Secondary Actions
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pushNamed(AppRoutes.questLog);
-                      },
-                      icon: const Icon(Icons.history),
-                      label: const Text('Quest-Log'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pushNamed(AppRoutes.settings);
-                      },
-                      icon: const Icon(Icons.settings),
-                      label: const Text('Einstellungen'),
-                    ),
-                  ),
-                ],
-              ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.of(
+                                  context,
+                                ).pushNamed(AppRoutes.settings);
+                              },
+                              icon: const Icon(Icons.settings),
+                              label: const Text('Einstellungen'),
+                            ),
+                          ),
+                        ],
+                      ),
 
                       const SizedBox(height: 16),
                     ],
@@ -410,11 +505,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: colorScheme.secondaryContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: colorScheme.secondary,
-              ),
+              child: Icon(icon, size: 24, color: colorScheme.secondary),
             ),
             const SizedBox(height: 8),
             Text(

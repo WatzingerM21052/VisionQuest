@@ -48,6 +48,13 @@ class AppStateNotifier extends StateNotifier<AppState> {
     state = state.copyWith(detectionFocus: option);
   }
 
+  /// Setzt den eingeloggten Benutzernamen.
+  ///
+  /// Parameter: [username] - Benutzername nach erfolgreichem Login/Register
+  void setUsername(String? username) {
+    state = state.copyWith(username: username);
+  }
+
   /// Verarbeitet einen neuen Quest-Erfolg (Objekterkennung).
   ///
   /// Diese Methode:

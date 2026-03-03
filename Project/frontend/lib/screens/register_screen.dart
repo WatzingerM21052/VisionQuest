@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_routes.dart';
+import '../providers/app_state_provider.dart';
 import '../services/auth_service.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -52,6 +54,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (!mounted) {
         return;
+      }
+
+      // Username in AppState speichern
+      final username = result.username;
+      if (username != null && username.isNotEmpty) {
+        ref.read(appStateProvider.notifier).setUsername(username);
       }
 
       ScaffoldMessenger.of(
@@ -291,9 +299,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Divider(
-                            color: colorScheme.outlineVariant,
-                          ),
+                          child: Divider(color: colorScheme.outlineVariant),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -303,9 +309,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                         Expanded(
-                          child: Divider(
-                            color: colorScheme.outlineVariant,
-                          ),
+                          child: Divider(color: colorScheme.outlineVariant),
                         ),
                       ],
                     ),

@@ -21,12 +21,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Animationen minimiert - nur wo sinnvoll nötig
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   Future<void> _handleLogout() async {
@@ -41,6 +35,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (!mounted) {
         return;
       }
+
+      // Username aus AppState entfernen
+      ref.read(appStateProvider.notifier).setUsername(null);
 
       Navigator.of(
         context,
@@ -66,6 +63,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final username = ref.watch(
+      appStateProvider.select((state) => state.username),
+    );
+    final displayName = (username != null && username.isNotEmpty)
+        ? username
+        : 'Spieler';
     final progress = ref.watch(
       appStateProvider.select((state) => state.progress),
     );
@@ -73,6 +76,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appStateProvider.select((state) => state.logEntries),
     );
     final today = DateTime.now();
+    final totalScanned = logEntries.length;
+    final totalFound = logEntries
+        .where((entry) => _isFoundLabel(entry.label))
+        .length;
     final todayEntries = logEntries.where((entry) {
       final t = entry.timestamp;
       return t.year == today.year &&
@@ -129,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                       // Welcome Section
                       Text(
-                        'Willkommen zurück!',
+                        'Willkommen zurück, $displayName!',
                         style: theme.textTheme.headlineMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w700,
@@ -211,7 +218,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Spieler',
+                                          displayName,
                                           style: theme.textTheme.titleMedium,
                                         ),
                                         const SizedBox(height: 4),
@@ -391,7 +398,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               colorScheme,
                               icon: Icons.camera_alt,
                               label: 'Gescannt',
-                              value: '${logEntries.length}',
+                              value: '$totalScanned',
                             ),
                           ),
                           SizedBox(width: isDesktop ? 16 : 12),
@@ -401,7 +408,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               colorScheme,
                               icon: Icons.check_circle,
                               label: 'Gefunden',
-                              value: '${logEntries.length}',
+                              value: '$totalFound',
                             ),
                           ),
                           SizedBox(width: isDesktop ? 16 : 12),
@@ -586,6 +593,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     }
     return matches;
+  }
+
+  bool _isFoundLabel(String label) {
+    final normalized = label.trim().toLowerCase();
+    if (normalized.isEmpty) {
+      return false;
+    }
+
+    const notDetectedLabels = {
+      'nichts erkannt',
+      'kein objekt erkannt',
+      'no object detected',
+      'nothing detected',
+    };
+
+    return !notDetectedLabels.contains(normalized);
   }
 
   Widget _buildStatCard(

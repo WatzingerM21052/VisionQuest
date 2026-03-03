@@ -2,8 +2,8 @@
 
 **Projekt:** VisionQuest - AR-basierte Objekterkennungs-Quest-App  
 **Sprache:** Dart/Flutter + Python (ML)  
-**Version:** 2.0.0  
-**Status:** ✅ Vollständig abgeschlossen (30 Steps über 4 Phasen)  
+**Version:** 2.1.0  
+**Status:** ✅ Vollständig abgeschlossen (32 Steps über 4 Phasen)  
 **Datum:** März 2026
 
 ---
@@ -251,7 +251,7 @@ Dokumentierte Public APIs:
 - ✅ flutter analyze: **No issues found!**
 - Alle 6 Screens + Animations + Routing + State Management + Docs integriert
 
-### Phase 4: Vision System Upgrades & Polish ✅ (9 Steps)
+### Phase 4: Vision System Upgrades & Polish ✅ (11 Steps)
 
 #### **Step 1: Logo Frame Removal**
 - User-Feedback: Rahmen um Logo zu weit außen
@@ -433,6 +433,30 @@ Widget _buildLottieWithFallback({
 - User sieht nie eine Error-Message
 - Graceful Degradation zu Material Widgets
 
+#### **Step 10: Personalisierte Home-Begrüßung (Username)**
+**Problem:** Home-Screen zeigte generischen Text (`Spieler`) statt eingeloggtem User.
+
+**Lösung:**
+- Username wird nach Login/Register aus Auth-Response persistiert (`auth_username`)
+- Home-Screen lädt den gespeicherten Username aus Session/Storage
+- UI-Texte personalisiert:
+  - Begrüßung: `Willkommen zurück, <username>!`
+  - Level-Profilkarte: Username statt statischem `Spieler`
+
+**Fallback-Verhalten:**
+- Wenn kein Username gespeichert ist, wird weiterhin `Spieler` angezeigt
+
+#### **Step 11: Statistiken präzisiert (Gescannt vs Gefunden)**
+**Problem:** Beide Stats zeigten denselben Wert, wodurch Semantik unklar war.
+
+**Lösung:**
+- **Gescannt** = alle Scan-Log-Einträge
+- **Gefunden** = alle erfolgreichen Erkennungen (exklusive `nichts erkannt` und äquivalente Labels)
+
+**Auswirkung:**
+- Dashboard spiegelt jetzt realen Scan-Verlauf korrekt wider
+- Fehlscans verfälschen den "Gefunden"-Wert nicht
+
 ---
 
 ## Features
@@ -449,7 +473,9 @@ Widget _buildLottieWithFallback({
 5. Reward-Screen zeigt XP + Multi-URL Lottie-Animation
 6. Quest-Ergebnis wird in globalem State gespeichert
 7. Home-Screen aktualisiert Level/XP/Streak + Daily Quest Progress
-8. QuestLog zeigt Historie mit Confidence-Bar
+8. Home-Screen zeigt personalisierte Begrüßung: `Willkommen zurück, <username>!`
+9. Dashboard-Stats sind getrennt: `Gescannt` (alle) vs `Gefunden` (ohne `nichts erkannt`)
+10. QuestLog zeigt Historie mit Confidence-Bar
 
 **Daily Quest System:**
 - 6 rotierende Quests (wechseln täglich basierend auf Datum)

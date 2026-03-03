@@ -8,10 +8,12 @@ Ein Flutter-Frontend mit Express-Backend und YOLO ML-Integration für ein intera
 - 🔄 **Daily Quests**: 6 täglich wechselnde Aufgaben mit model-kompatiblen Zielen
 - 🤖 **Dual ML Models**: YOLO v11 (Python) + COCO-SSD (TensorFlow.js) umschaltbar
 - 🎯 **Circle-Focused Detection**: Kreis-basierte Objekterkennung mit Strict/Balanced Modi
+- 👤 **Personalisierte Home-UI**: Begrüßung und Profilkarte mit eingeloggtem Username
+- 📊 **Klare Scan-Statistiken**: `Gescannt` = alle Scans, `Gefunden` = ohne `nichts erkannt`
 - 🎨 **5 Themes**: Light, Dark, System, RetroArcade, AdventureMap
 - 📱 **Responsive Design**: Mobile, Tablet, Desktop
 - 🔥 **Streak-Tracking**: Konsekutive Tage mit mindestens 1 Quest
-- 📊 **Quest-Log**: Historie aller gescannten Objekte mit Confidence-Anzeige
+- 📒 **Quest-Log**: Historie aller Scan-Ergebnisse mit Confidence-Anzeige
 - ✨ **Animations**: Multi-URL Lottie-Fallback + UI-Transitions
 
 ## 📁 Projektstruktur
@@ -175,6 +177,13 @@ VISION_YOLO_IMGSZ=640
 - Circle-Intersection Filtering (nur Objekte im Kreis)
 - Multi-URL Lottie-Fallback für Animationen
 
+### Home Dashboard Features
+- Begrüßung: `Willkommen zurück, <username>!`
+- Profilkarte zeigt Username statt generischem Platzhalter
+- Stats-Semantik:
+  - `Gescannt`: alle Log-Einträge
+  - `Gefunden`: nur erfolgreiche Erkennungen (ohne `nichts erkannt`)
+
 ## 👨‍💻 Entwicklung
 
 **Hot Reload (Flutter):**
@@ -209,4 +218,4 @@ Bei Fragen oder Problemen:
 
 **Projekt erstellt:** Februar 2026  
 **Letzte Aktualisierung:** März 2026  
-**Version:** 2.0.0
+**Version:** 2.1.0

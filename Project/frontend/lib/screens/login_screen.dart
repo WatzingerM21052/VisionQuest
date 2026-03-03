@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_routes.dart';
+import '../providers/app_state_provider.dart';
 import '../services/auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -46,6 +48,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) {
         return;
+      }
+
+      // Username in AppState speichern
+      final username = result.username;
+      if (username != null && username.isNotEmpty) {
+        ref.read(appStateProvider.notifier).setUsername(username);
       }
 
       ScaffoldMessenger.of(
@@ -226,9 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Divider(
-                            color: colorScheme.outlineVariant,
-                          ),
+                          child: Divider(color: colorScheme.outlineVariant),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -238,9 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         Expanded(
-                          child: Divider(
-                            color: colorScheme.outlineVariant,
-                          ),
+                          child: Divider(color: colorScheme.outlineVariant),
                         ),
                       ],
                     ),

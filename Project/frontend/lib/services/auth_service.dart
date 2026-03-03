@@ -29,16 +29,31 @@ class AuthResponse {
   });
 
   String? get token => data?['token'] as String?;
+
+  String? get username {
+    final userData = data?['user'];
+    if (userData is Map<String, dynamic>) {
+      return userData['username']?.toString();
+    }
+    if (userData is Map) {
+      return userData['username']?.toString();
+    }
+    return data?['username']?.toString();
+  }
 }
 
 abstract class TokenStorage {
   Future<String?> readToken();
   Future<void> writeToken(String token);
   Future<void> clearToken();
+  Future<String?> readUsername();
+  Future<void> writeUsername(String username);
+  Future<void> clearUsername();
 }
 
 class InMemoryTokenStorage implements TokenStorage {
   String? _token;
+  String? _username;
 
   @override
   Future<String?> readToken() async {
@@ -54,6 +69,21 @@ class InMemoryTokenStorage implements TokenStorage {
   Future<void> clearToken() async {
     _token = null;
   }
+
+  @override
+  Future<String?> readUsername() async {
+    return _username;
+  }
+
+  @override
+  Future<void> writeUsername(String username) async {
+    _username = username;
+  }
+
+  @override
+  Future<void> clearUsername() async {
+    _username = null;
+  }
 }
 
 class SecureTokenStorage implements TokenStorage {
@@ -61,6 +91,7 @@ class SecureTokenStorage implements TokenStorage {
     : _storage = storage ?? const FlutterSecureStorage();
 
   static const String _tokenKey = 'auth_token';
+  static const String _usernameKey = 'auth_username';
   final FlutterSecureStorage _storage;
 
   @override
@@ -76,6 +107,21 @@ class SecureTokenStorage implements TokenStorage {
   @override
   Future<void> clearToken() async {
     await _storage.delete(key: _tokenKey);
+  }
+
+  @override
+  Future<String?> readUsername() async {
+    return _storage.read(key: _usernameKey);
+  }
+
+  @override
+  Future<void> writeUsername(String username) async {
+    await _storage.write(key: _usernameKey, value: username);
+  }
+
+  @override
+  Future<void> clearUsername() async {
+    await _storage.delete(key: _usernameKey);
   }
 }
 
@@ -149,11 +195,16 @@ class AuthService {
 
     final result = await _handleAuthResponse(response);
     await _storage.clearToken();
+    await _storage.clearUsername();
     return result;
   }
 
   Future<String?> getStoredToken() {
     return _storage.readToken();
+  }
+
+  Future<String?> getStoredUsername() {
+    return _storage.readUsername();
   }
 
   Map<String, String> _jsonHeaders() {
@@ -185,6 +236,10 @@ class AuthService {
     if (success) {
       if (persistToken && result.token != null) {
         await _storage.writeToken(result.token!);
+      }
+      final username = result.username?.trim();
+      if (persistToken && username != null && username.isNotEmpty) {
+        await _storage.writeUsername(username);
       }
       return result;
     }

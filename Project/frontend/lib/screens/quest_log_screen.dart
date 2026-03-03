@@ -10,7 +10,9 @@ class QuestLogScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final entries = ref.watch(appStateProvider.select((state) => state.logEntries));
+    final entries = ref.watch(
+      appStateProvider.select((state) => state.logEntries),
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Quest-Log')),
@@ -18,7 +20,9 @@ class QuestLogScreen extends ConsumerWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
-            final contentWidth = width > 1200 ? 1100.0 : (width > 900 ? 900.0 : 680.0);
+            final contentWidth = width > 1200
+                ? 1100.0
+                : (width > 900 ? 900.0 : 680.0);
             final columns = width >= 1000 ? 4 : (width >= 700 ? 3 : 2);
 
             return Center(
@@ -75,54 +79,139 @@ class QuestLogScreen extends ConsumerWidget {
                         Expanded(
                           child: GridView.builder(
                             itemCount: entries.length,
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: columns,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 1.1,
-                            ),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  childAspectRatio: width >= 1000 ? 1.2 : 1.05,
+                                ),
                             itemBuilder: (context, index) {
                               final entry = entries[index];
                               return Card(
+                                elevation: 1.5,
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  colorScheme.primaryContainer,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: colorScheme.primary
+                                                    .withValues(alpha: 0.2),
+                                              ),
+                                            ),
+                                            child: Icon(
+                                              _iconForLabel(entry.label),
+                                              color: colorScheme.primary,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: colorScheme
+                                                  .secondaryContainer,
+                                              borderRadius:
+                                                  BorderRadius.circular(999),
+                                            ),
+                                            child: Text(
+                                              '+${entry.xp} XP',
+                                              style: theme.textTheme.labelMedium
+                                                  ?.copyWith(
+                                                    color: colorScheme
+                                                        .onSecondaryContainer,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        entry.label,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 8),
                                       Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(10),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 6,
                                         ),
-                                        child: Icon(
-                                          _iconForLabel(entry.label),
-                                          color: colorScheme.primary,
+                                        decoration: BoxDecoration(
+                                          color: colorScheme
+                                              .surfaceContainerHighest,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.schedule,
+                                              size: 14,
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                _formatTimestamp(
+                                                  entry.timestamp,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: colorScheme
+                                                          .onSurfaceVariant,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                       const Spacer(),
-                                      Text(
-                                        entry.label.toUpperCase(),
-                                        style: theme.textTheme.titleMedium,
-                                      ),
                                       const SizedBox(height: 4),
-                                      Text(
-                                        '+${entry.xp} XP',
-                                        style: theme.textTheme.labelLarge?.copyWith(
-                                          color: colorScheme.primary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        _formatTimestamp(entry.timestamp),
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
                                       Text(
                                         'Confidence ${(entry.confidence * 100).toStringAsFixed(1)}%',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(6),
+                                        child: LinearProgressIndicator(
+                                          value: entry.confidence.clamp(0, 1),
+                                          minHeight: 6,
+                                          backgroundColor: colorScheme
+                                              .surfaceContainerHighest,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                entry.confidence >= 0.75
+                                                    ? colorScheme.tertiary
+                                                    : colorScheme.primary,
+                                              ),
                                         ),
                                       ),
                                     ],

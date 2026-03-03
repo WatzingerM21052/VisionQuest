@@ -91,7 +91,9 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
           child: LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              final contentWidth = width > 1000 ? 760.0 : (width > 700 ? 620.0 : 480.0);
+              final contentWidth = width > 1000
+                  ? 760.0
+                  : (width > 700 ? 620.0 : 480.0);
 
               return Center(
                 child: ConstrainedBox(
@@ -130,7 +132,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
               color: colorScheme.primaryContainer,
             ),
             child: Lottie.network(
-              'https://lottie.host/06f3ccf2-9fc8-43f5-8a36-a6acb7b72e42/CLruBU3s8O.json',
+              'https://assets.lottiefiles.com/packages/lf20_jcikwtux.json',
               fit: BoxFit.contain,
               onLoaded: (composition) {
                 // Animation loaded successfully
@@ -169,9 +171,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
               borderRadius: BorderRadius.circular(2),
               child: LinearProgressIndicator(
                 backgroundColor: colorScheme.surfaceContainer,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  colorScheme.primary,
-                ),
+                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
               ),
             ),
           ),
@@ -203,7 +203,7 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                 ),
               ),
               child: Lottie.network(
-                'https://lottie.host/559e9a8d-7bfb-49d5-ba71-c3798dbfeb8d/OtnnQdFWPW.json',
+                'https://assets.lottiefiles.com/packages/lf20_03ylnp7e.json',
                 fit: BoxFit.contain,
                 repeat: false,
                 reverse: false,

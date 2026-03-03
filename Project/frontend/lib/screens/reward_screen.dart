@@ -131,21 +131,15 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
               shape: BoxShape.circle,
               color: colorScheme.primaryContainer,
             ),
-            child: Lottie.network(
-              'https://assets.lottiefiles.com/packages/lf20_jcikwtux.json',
-              fit: BoxFit.contain,
-              onLoaded: (composition) {
-                // Animation loaded successfully
-              },
-              errorBuilder: (context, error, stackTrace) {
-                // Fallback to circular progress indicator
-                return CircularProgressIndicator(
-                  strokeWidth: 6,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    colorScheme.primary,
-                  ),
-                );
-              },
+            child: _buildLottieWithFallback(
+              primaryUrl:
+                  'https://assets.lottiefiles.com/packages/lf20_jcikwtux.json',
+              secondaryUrl:
+                  'https://lottie.host/95f5ddf8-f9f6-4cd6-bd6e-df16f77f4f5e/7T4c6AWfJx.json',
+              fallback: CircularProgressIndicator(
+                strokeWidth: 6,
+                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+              ),
             ),
           ),
           const SizedBox(height: 32),
@@ -202,17 +196,25 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                   ],
                 ),
               ),
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0.92, end: 1.0),
-                duration: const Duration(milliseconds: 650),
-                curve: Curves.easeOutBack,
-                builder: (context, value, child) {
-                  return Transform.scale(scale: value, child: child);
-                },
-                child: Icon(
-                  Icons.workspace_premium,
-                  size: 120,
-                  color: colorScheme.primary,
+              child: _buildLottieWithFallback(
+                primaryUrl:
+                    'https://assets.lottiefiles.com/packages/lf20_03ylnp7e.json',
+                secondaryUrl:
+                    'https://lottie.host/4f2f4ad1-2d46-4b2a-8fbe-2f74f74fce5a/5TwvQw6sYV.json',
+                repeat: false,
+                reverse: false,
+                fallback: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.92, end: 1.0),
+                  duration: const Duration(milliseconds: 650),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) {
+                    return Transform.scale(scale: value, child: child);
+                  },
+                  child: Icon(
+                    Icons.workspace_premium,
+                    size: 120,
+                    color: colorScheme.primary,
+                  ),
                 ),
               ),
             ),
@@ -287,6 +289,30 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLottieWithFallback({
+    required String primaryUrl,
+    required String secondaryUrl,
+    required Widget fallback,
+    bool repeat = true,
+    bool reverse = false,
+  }) {
+    return Lottie.network(
+      primaryUrl,
+      fit: BoxFit.contain,
+      repeat: repeat,
+      reverse: reverse,
+      errorBuilder: (context, error, stackTrace) {
+        return Lottie.network(
+          secondaryUrl,
+          fit: BoxFit.contain,
+          repeat: repeat,
+          reverse: reverse,
+          errorBuilder: (context, error, stackTrace) => fallback,
+        );
+      },
     );
   }
 }

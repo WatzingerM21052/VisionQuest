@@ -1,4 +1,5 @@
 import json
+import importlib
 import os
 import sys
 
@@ -14,7 +15,8 @@ def main() -> int:
         return 1
 
     try:
-        from ultralytics import YOLO
+        ultralytics_module = importlib.import_module("ultralytics")
+        YOLO = getattr(ultralytics_module, "YOLO")
     except Exception as error:
         print(json.dumps({"error": f"ULTRALYTICS_IMPORT_FAILED: {error}"}))
         return 1

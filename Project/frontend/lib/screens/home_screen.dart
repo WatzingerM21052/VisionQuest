@@ -95,15 +95,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
-            final contentWidth = width > 1200
-                ? 1040.0
-                : (width > 900 ? 820.0 : 640.0);
+            final isDesktop = width >= 1100;
+            final isWideDesktop = width >= 1500;
+            final contentWidth = isWideDesktop
+                ? 1240.0
+                : (isDesktop ? 1080.0 : (width > 900 ? 820.0 : 640.0));
+            final horizontalPadding = isWideDesktop
+                ? 36.0
+                : (isDesktop ? 28.0 : 16.0);
+            final verticalPadding = isDesktop ? 20.0 : 16.0;
 
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: contentWidth),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -121,6 +130,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         style: theme.textTheme.headlineMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w700,
+                          fontSize: isDesktop
+                              ? (theme.textTheme.headlineMedium?.fontSize ??
+                                        20) +
+                                    2
+                              : theme.textTheme.headlineMedium?.fontSize,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -380,7 +394,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               value: '${logEntries.length}',
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isDesktop ? 16 : 12),
                           Expanded(
                             child: _buildStatCard(
                               theme,
@@ -390,7 +404,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               value: '${logEntries.length}',
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isDesktop ? 16 : 12),
                           Expanded(
                             child: _buildStatCard(
                               theme,
@@ -477,7 +491,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               label: const Text('Quest-Log'),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: isDesktop ? 16 : 12),
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () {

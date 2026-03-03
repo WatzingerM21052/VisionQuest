@@ -281,61 +281,103 @@ class AppThemes {
       ),
       titleSmall: GoogleFonts.poppins(
         fontWeight: FontWeight.w600,
-        fontSize: 14,
+        fontSize: 15,
       ),
       bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400),
       bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
-      bodySmall: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400),
+      bodySmall: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w400),
       labelLarge: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
       labelMedium: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 12),
-      labelSmall: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 10),
+      labelSmall: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 12),
     );
   }
 
   static TextTheme _retroTextTheme(ColorScheme colorScheme) {
     return TextTheme(
       displayLarge: GoogleFonts.pressStart2p(
-        fontSize: 24,
+        fontSize: 30,
+        height: 1.35,
+        letterSpacing: 0.4,
         fontWeight: FontWeight.w400,
       ),
       displayMedium: GoogleFonts.pressStart2p(
-        fontSize: 20,
+        fontSize: 24,
+        height: 1.35,
+        letterSpacing: 0.4,
         fontWeight: FontWeight.w400,
       ),
       displaySmall: GoogleFonts.pressStart2p(
-        fontSize: 18,
+        fontSize: 20,
+        height: 1.35,
+        letterSpacing: 0.35,
         fontWeight: FontWeight.w400,
       ),
       headlineLarge: GoogleFonts.pressStart2p(
-        fontSize: 18,
+        fontSize: 20,
+        height: 1.3,
+        letterSpacing: 0.3,
         fontWeight: FontWeight.w400,
       ),
       headlineMedium: GoogleFonts.pressStart2p(
-        fontSize: 16,
+        fontSize: 18,
+        height: 1.3,
+        letterSpacing: 0.25,
         fontWeight: FontWeight.w400,
       ),
       headlineSmall: GoogleFonts.pressStart2p(
-        fontSize: 14,
+        fontSize: 16,
+        height: 1.28,
+        letterSpacing: 0.2,
         fontWeight: FontWeight.w400,
       ),
       titleLarge: GoogleFonts.pressStart2p(
-        fontSize: 14,
+        fontSize: 16,
+        height: 1.25,
+        letterSpacing: 0.2,
         fontWeight: FontWeight.w400,
       ),
       titleMedium: GoogleFonts.pressStart2p(
-        fontSize: 12,
+        fontSize: 14,
+        height: 1.25,
+        letterSpacing: 0.15,
         fontWeight: FontWeight.w400,
       ),
       titleSmall: GoogleFonts.pressStart2p(
-        fontSize: 10,
+        fontSize: 12,
+        height: 1.2,
+        letterSpacing: 0.1,
         fontWeight: FontWeight.w400,
       ),
-      bodyLarge: GoogleFonts.vt323(fontSize: 24, fontWeight: FontWeight.w400),
-      bodyMedium: GoogleFonts.vt323(fontSize: 22, fontWeight: FontWeight.w400),
-      bodySmall: GoogleFonts.vt323(fontSize: 20, fontWeight: FontWeight.w400),
-      labelLarge: GoogleFonts.vt323(fontSize: 22, fontWeight: FontWeight.w400),
-      labelMedium: GoogleFonts.vt323(fontSize: 20, fontWeight: FontWeight.w400),
-      labelSmall: GoogleFonts.vt323(fontSize: 18, fontWeight: FontWeight.w400),
+      bodyLarge: GoogleFonts.vt323(
+        fontSize: 26,
+        height: 1.2,
+        fontWeight: FontWeight.w400,
+      ),
+      bodyMedium: GoogleFonts.vt323(
+        fontSize: 24,
+        height: 1.2,
+        fontWeight: FontWeight.w400,
+      ),
+      bodySmall: GoogleFonts.vt323(
+        fontSize: 22,
+        height: 1.15,
+        fontWeight: FontWeight.w400,
+      ),
+      labelLarge: GoogleFonts.vt323(
+        fontSize: 24,
+        height: 1.15,
+        fontWeight: FontWeight.w400,
+      ),
+      labelMedium: GoogleFonts.vt323(
+        fontSize: 22,
+        height: 1.15,
+        fontWeight: FontWeight.w400,
+      ),
+      labelSmall: GoogleFonts.vt323(
+        fontSize: 20,
+        height: 1.1,
+        fontWeight: FontWeight.w400,
+      ),
     );
   }
 
@@ -370,13 +412,13 @@ class AppThemes {
         fontSize: 16,
         fontWeight: FontWeight.w600,
       ),
-      titleSmall: GoogleFonts.cinzel(fontSize: 14, fontWeight: FontWeight.w600),
-      bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400),
-      bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
-      bodySmall: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400),
-      labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
-      labelMedium: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
-      labelSmall: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500),
+      titleSmall: GoogleFonts.cinzel(fontSize: 15, fontWeight: FontWeight.w600),
+      bodyLarge: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w400),
+      bodyMedium: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w400),
+      bodySmall: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w400),
+      labelLarge: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500),
+      labelMedium: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+      labelSmall: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 
 import '../providers/app_state_provider.dart';
 import '../services/vision_service.dart';
@@ -119,21 +120,30 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
         key: const ValueKey('analyzing'),
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Lottie Loading Animation
           Container(
-            padding: const EdgeInsets.all(24),
+            width: 200,
+            height: 200,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: colorScheme.primaryContainer,
             ),
-            child: SizedBox(
-              width: 72,
-              height: 72,
-              child: CircularProgressIndicator(
-                strokeWidth: 6,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  colorScheme.primary,
-                ),
-              ),
+            child: Lottie.network(
+              'https://lottie.host/06f3ccf2-9fc8-43f5-8a36-a6acb7b72e42/CLruBU3s8O.json',
+              fit: BoxFit.contain,
+              onLoaded: (composition) {
+                // Animation loaded successfully
+              },
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to circular progress indicator
+                return CircularProgressIndicator(
+                  strokeWidth: 6,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    colorScheme.primary,
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 32),
@@ -176,11 +186,13 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
         key: const ValueKey('reward'),
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Trophy Icon with scale animation
+          // Lottie Success Animation with Scale
           ScaleTransition(
             scale: _scaleAnimation,
             child: Container(
-              padding: const EdgeInsets.all(20),
+              width: 200,
+              height: 200,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
@@ -190,10 +202,22 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                   ],
                 ),
               ),
-              child: Icon(
-                Icons.workspace_premium,
-                size: 108,
-                color: colorScheme.primary,
+              child: Lottie.network(
+                'https://lottie.host/559e9a8d-7bfb-49d5-ba71-c3798dbfeb8d/OtnnQdFWPW.json',
+                fit: BoxFit.contain,
+                repeat: false,
+                reverse: false,
+                onLoaded: (composition) {
+                  // Animation loaded successfully
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback to trophy icon
+                  return Icon(
+                    Icons.workspace_premium,
+                    size: 120,
+                    color: colorScheme.primary,
+                  );
+                },
               ),
             ),
           ),

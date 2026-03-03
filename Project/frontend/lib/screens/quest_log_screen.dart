@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class QuestLogScreen extends StatelessWidget {
+import '../providers/app_state_provider.dart';
+
+class QuestLogScreen extends ConsumerWidget {
   const QuestLogScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    final entries = [
-      ('person', '+68 XP', 'Heute 14:05', Icons.person),
-      ('bottle', '+51 XP', 'Heute 13:20', Icons.local_drink),
-      ('book', '+74 XP', 'Heute 10:42', Icons.menu_book),
-      ('chair', '+46 XP', 'Gestern 19:31', Icons.chair),
-      ('laptop', '+79 XP', 'Gestern 16:11', Icons.laptop),
-      ('cup', '+39 XP', 'Gestern 08:55', Icons.coffee),
-    ];
+    final entries = ref.watch(appStateProvider.select((state) => state.logEntries));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Quest-Log')),
@@ -48,60 +43,95 @@ class QuestLogScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Expanded(
-                        child: GridView.builder(
-                          itemCount: entries.length,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: columns,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 1.1,
-                          ),
-                          itemBuilder: (context, index) {
-                            final item = entries[index];
-                            return Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primaryContainer,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Icon(
-                                        item.$4,
-                                        color: colorScheme.primary,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      item.$1.toUpperCase(),
-                                      style: theme.textTheme.titleMedium,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item.$2,
-                                      style: theme.textTheme.labelLarge?.copyWith(
-                                        color: colorScheme.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item.$3,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
+                      if (entries.isEmpty)
+                        Expanded(
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.history_toggle_off,
+                                  size: 56,
+                                  color: colorScheme.onSurfaceVariant,
                                 ),
-                              ),
-                            );
-                          },
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Noch keine Funde gespeichert',
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Starte einen Scan, um Einträge zu sammeln.',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        Expanded(
+                          child: GridView.builder(
+                            itemCount: entries.length,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: columns,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 1.1,
+                            ),
+                            itemBuilder: (context, index) {
+                              final entry = entries[index];
+                              return Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: colorScheme.primaryContainer,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          _iconForLabel(entry.label),
+                                          color: colorScheme.primary,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        entry.label.toUpperCase(),
+                                        style: theme.textTheme.titleMedium,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '+${entry.xp} XP',
+                                        style: theme.textTheme.labelLarge?.copyWith(
+                                          color: colorScheme.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _formatTimestamp(entry.timestamp),
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Confidence ${(entry.confidence * 100).toStringAsFixed(1)}%',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -111,5 +141,33 @@ class QuestLogScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final dayOnlyNow = DateTime(now.year, now.month, now.day);
+    final dayOnlyTs = DateTime(timestamp.year, timestamp.month, timestamp.day);
+    final diffDays = dayOnlyNow.difference(dayOnlyTs).inDays;
+    final hh = timestamp.hour.toString().padLeft(2, '0');
+    final mm = timestamp.minute.toString().padLeft(2, '0');
+
+    if (diffDays == 0) {
+      return 'Heute $hh:$mm';
+    }
+    if (diffDays == 1) {
+      return 'Gestern $hh:$mm';
+    }
+    return '${timestamp.day.toString().padLeft(2, '0')}.${timestamp.month.toString().padLeft(2, '0')}.${timestamp.year} $hh:$mm';
+  }
+
+  IconData _iconForLabel(String label) {
+    final normalized = label.toLowerCase();
+    if (normalized.contains('person')) return Icons.person;
+    if (normalized.contains('bottle')) return Icons.local_drink;
+    if (normalized.contains('book')) return Icons.menu_book;
+    if (normalized.contains('chair')) return Icons.chair;
+    if (normalized.contains('laptop')) return Icons.laptop;
+    if (normalized.contains('cup')) return Icons.coffee;
+    return Icons.category;
   }
 }

@@ -43,9 +43,7 @@ class VisionQuestApp extends StatelessWidget {
           }
         }
 
-        return MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        );
+        return MaterialPageRoute(builder: (context) => const LoginScreen());
       },
     );
   }
@@ -224,5 +222,3 @@ ThemeData _buildDarkTheme() {
     ),
   );
 }
-
-

@@ -20,6 +20,61 @@ async function loadModel() {
     return modelPromise;
 }
 
+function jimpToTensor(image) {
+    const pixels = image.bitmap.data;
+    const rgbPixels = [];
+
+    for (let i = 0; i < pixels.length; i += 4) {
+        rgbPixels.push(pixels[i]);
+        rgbPixels.push(pixels[i + 1]);
+        rgbPixels.push(pixels[i + 2]);
+    }
+
+    return tf.tensor3d(
+        rgbPixels,
+        [image.bitmap.height, image.bitmap.width, 3],
+        'int32'
+    );
+}
+
+async function detectOnImage(model, image) {
+    const imageTensor = tf.tidy(() => jimpToTensor(image));
+    try {
+        return await model.detect(imageTensor);
+    } finally {
+        imageTensor.dispose();
+    }
+}
+
+function mergePredictions(fullPredictions, centerPredictions) {
+    const byClass = new Map();
+
+    for (const prediction of fullPredictions) {
+        const existing = byClass.get(prediction.class);
+        if (!existing || prediction.score > existing.score) {
+            byClass.set(prediction.class, {
+                ...prediction,
+                score: prediction.score,
+                source: 'full'
+            });
+        }
+    }
+
+    for (const prediction of centerPredictions) {
+        const boosted = Math.min(0.99, prediction.score + 0.08);
+        const existing = byClass.get(prediction.class);
+        if (!existing || boosted > existing.score) {
+            byClass.set(prediction.class, {
+                ...prediction,
+                score: boosted,
+                source: 'center'
+            });
+        }
+    }
+
+    return Array.from(byClass.values()).sort((a, b) => b.score - a.score);
+}
+
 async function detectImage(buffer) {
     let model;
 
@@ -49,66 +104,40 @@ async function detectImage(buffer) {
         const targetHeight = Math.max(1, Math.round(image.bitmap.height * scale));
         image.resize(targetWidth, targetHeight, Jimp.RESIZE_BILINEAR);
 
-        // Convert Jimp image to tensor3d
-        const pixels = image.bitmap.data;
-        const rgbPixels = [];
+        const centerCrop = image.clone();
+        const cropSize = Math.max(1, Math.round(Math.min(targetWidth, targetHeight) * 0.72));
+        const cropX = Math.max(0, Math.floor((targetWidth - cropSize) / 2));
+        const cropY = Math.max(0, Math.floor((targetHeight - cropSize) / 2));
+        centerCrop.crop(cropX, cropY, cropSize, cropSize);
 
-        // Convert RGBA to RGB
-        for (let i = 0; i < pixels.length; i += 4) {
-            rgbPixels.push(pixels[i]);     // R
-            rgbPixels.push(pixels[i + 1]); // G
-            rgbPixels.push(pixels[i + 2]); // B
-        }
+        const [fullPredictions, centerPredictions] = await Promise.all([
+            detectOnImage(model, image),
+            detectOnImage(model, centerCrop)
+        ]);
 
-        // Create tensor from image data - COCO-SSD expects int32 with values 0-255
-        const imageTensor = tf.tidy(() => {
-            return tf.tensor3d(
-                rgbPixels,
-                [targetHeight, targetWidth, 3],
-                'int32'
-            );
-        });
+        const merged = mergePredictions(fullPredictions || [], centerPredictions || []);
+        const filtered = merged.filter(p => p.score > 0.22);
 
-        try {
-            // COCO-SSD API: detect() method returns predictions
-            const predictions = await model.detect(imageTensor);
-
-            if (!predictions || predictions.length === 0) {
-                return {
-                    label: 'Keine Objekte erkannt',
-                    confidence: 0,
-                    predictions: []
-                };
-            }
-
-            // Filter by confidence threshold and sort
-            const filtered = predictions
-                .filter(p => p.score > 0.2)
-                .sort((a, b) => b.score - a.score);
-
-            if (filtered.length === 0) {
-                return {
-                    label: 'Keine Objekte erkannt',
-                    confidence: 0,
-                    predictions: []
-                };
-            }
-
-            // Get top prediction
-            const top = filtered[0];
-
+        if (filtered.length === 0) {
             return {
-                label: top.class,
-                confidence: Math.round(top.score * 100) / 100,
-                predictions: filtered.map(p => ({
-                    className: p.class,
-                    probability: Math.round(p.score * 100) / 100,
-                    bbox: p.bbox  // [x, y, width, height]
-                }))
+                label: 'Keine Objekte erkannt',
+                confidence: 0,
+                predictions: []
             };
-        } finally {
-            imageTensor.dispose();
         }
+
+        const top = filtered[0];
+
+        return {
+            label: top.class,
+            confidence: Math.round(top.score * 100) / 100,
+            predictions: filtered.slice(0, 8).map(p => ({
+                className: p.class,
+                probability: Math.round(p.score * 100) / 100,
+                bbox: p.bbox,
+                source: p.source
+            }))
+        };
     } catch (error) {
         console.error('[VISION] Detection error:', error.message);
         return {

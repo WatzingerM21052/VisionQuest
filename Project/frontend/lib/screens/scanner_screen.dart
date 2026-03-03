@@ -239,22 +239,32 @@ class _ScannerScreenState extends State<ScannerScreen> {
                             label: Text(
                               _isProcessing
                                   ? 'Erkennung läuft...'
-                                  : 'Foto aufnehmen',
+                                  : 'Scan starten',
                             ),
                             style: FilledButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                           ),
 
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
 
-                          // Info Text
-                          Text(
-                            'Positioniere dein Objekt in der Bildmitte',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                          // Minimal Info Action (hover tooltip + expandable sheet)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Tooltip(
+                              message: 'Erkennungstipps anzeigen',
+                              child: IconButton(
+                                onPressed: _showDetectionTips,
+                                icon: const Icon(Icons.info_outline),
+                                visualDensity: VisualDensity.compact,
+                                style: IconButton.styleFrom(
+                                  backgroundColor: colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.8),
+                                  foregroundColor: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
@@ -266,6 +276,53 @@ class _ScannerScreenState extends State<ScannerScreen> {
           },
         ),
       ),
+    );
+  }
+
+  void _showDetectionTips() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Erkennungstipps',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Gut erkennbar: Person, Handy, Tasse, Flasche, Buch, Laptop, Stuhl, Rucksack.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Objekt mittig im Kreis, gute Beleuchtung, ruhige Hand.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

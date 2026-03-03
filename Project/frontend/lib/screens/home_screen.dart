@@ -25,11 +25,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    // Subtlere Animation: 1.0 zu 1.08 statt 1.15
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOutCubic),
     );
   }
 
@@ -118,39 +119,111 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header Section with Logo
-                      Align(
-                        alignment: Alignment.center,
-                        child: Image.asset(
-                          'assets/Startlogo.png',
-                          height: 120,
-                          fit: BoxFit.contain,
+                      // Header Section with Logo - Full Width
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              colorScheme.primary.withValues(alpha: 0.1),
+                              colorScheme.secondary.withValues(alpha: 0.08),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.2),
+                            width: 2,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 24,
+                          horizontal: 16,
+                        ),
+                        child: Column(
+                          children: [
+                            Image.asset(
+                              'assets/Startlogo.png',
+                              height: 160,
+                              fit: BoxFit.contain,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'VisionQuest',
+                              style: theme.textTheme.headlineLarge?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
 
                       // Welcome Section
                       Text(
                         'Willkommen zurück!',
-                        style: theme.textTheme.displaySmall?.copyWith(
+                        style: theme.textTheme.headlineMedium?.copyWith(
                           color: colorScheme.primary,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         'Dein nächstes Abenteuer wartet...',
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: colorScheme.onSurfaceVariant,
+                          fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      // Animated Streak Counter
+                      const SizedBox(height: 20),
+                      // Animated Streak Counter - Enhanced Design
                       ScaleTransition(
                         scale: _pulseAnimation,
-                        child: Text(
-                          '🔥 Streak: ${progress.streak} Tag${progress.streak == 1 ? '' : 'e'}',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: colorScheme.secondary,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                colorScheme.secondary.withValues(alpha: 0.15),
+                                colorScheme.tertiary.withValues(alpha: 0.12),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: colorScheme.secondary.withValues(
+                                alpha: 0.3,
+                              ),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colorScheme.secondary.withValues(
+                                  alpha: 0.15,
+                                ),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('🔥', style: theme.textTheme.headlineMedium),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Streak: ${progress.streak} Tag${progress.streak == 1 ? '' : 'e'}',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: colorScheme.secondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -439,7 +512,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         icon: const Icon(Icons.camera_alt),
                         label: const Text('Scanner starten'),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 24,
+                          ),
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          textStyle: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
 
@@ -494,33 +578,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     required String value,
   }) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(8),
+      elevation: 2,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              colorScheme.secondaryContainer.withValues(alpha: 0.6),
+              colorScheme.primaryContainer.withValues(alpha: 0.4),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: colorScheme.secondary.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(icon, size: 24, color: colorScheme.secondary),
               ),
-              child: Icon(icon, size: 24, color: colorScheme.secondary),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.primary,
+              const SizedBox(height: 10),
+              Text(
+                value,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall,
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -8,10 +8,10 @@ import '../models/app_theme_option.dart';
 /// ThemeMode-Bestimmung basierend auf [AppThemeOption].
 ///
 /// Verfügbare Designs:
-/// - Light/Dark: Purple Material You (#5D4E8C)
+/// - Light/Dark: Teal Modern (#008B8B)
 /// - System: Folgt OS-Einstellung
-/// - RetroArcade: Neon-Cyan (#00C2FF)
-/// - AdventureMap: Warm Brown (#8B5E3C)
+/// - RetroArcade: Neon 80s (#FF10F0 - Magenta/Neon-Pink)
+/// - AdventureMap: Warm Brown (#8B5E3C) - unverändert, passt perfekt
 class AppThemes {
   /// Bestimmt den [ThemeMode] für eine [AppThemeOption].
   ///
@@ -41,21 +41,21 @@ class AppThemes {
       case AppThemeOption.system:
         return _buildTheme(
           ColorScheme.fromSeed(
-            seedColor: const Color(0xFF5D4E8C),
+            seedColor: const Color(0xFF006D63), // Teal-Grün
             brightness: Brightness.light,
           ),
         );
       case AppThemeOption.dark:
         return _buildTheme(
           ColorScheme.fromSeed(
-            seedColor: const Color(0xFF5D4E8C),
+            seedColor: const Color(0xFF006D63), // Teal-Grün
             brightness: Brightness.dark,
           ),
         );
       case AppThemeOption.retroArcade:
         return _buildTheme(
           ColorScheme.fromSeed(
-            seedColor: const Color(0xFF00C2FF),
+            seedColor: const Color(0xFFFF10F0), // Neon-Magenta (80s Arcade)
             brightness: Brightness.light,
           ),
         );
@@ -72,13 +72,13 @@ class AppThemes {
   /// Gibt das Dark-Mode ThemeData für die gegebene [AppThemeOption] zurück.
   ///
   /// Falls die Option kein spezielles Dark-Design hat (light, system),
-  /// wird das Standard Dark Purple Design zurückgegeben.
+  /// wird das Standard Dark-Design zurückgegeben.
   static ThemeData darkThemeFor(AppThemeOption option) {
     switch (option) {
       case AppThemeOption.retroArcade:
         return _buildTheme(
           ColorScheme.fromSeed(
-            seedColor: const Color(0xFF00C2FF),
+            seedColor: const Color(0xFFFF10F0), // Neon-Magenta (80s)
             brightness: Brightness.dark,
           ),
         );
@@ -94,7 +94,7 @@ class AppThemes {
       case AppThemeOption.dark:
         return _buildTheme(
           ColorScheme.fromSeed(
-            seedColor: const Color(0xFF5D4E8C),
+            seedColor: const Color(0xFF006D63), // Teal-Grün
             brightness: Brightness.dark,
           ),
         );

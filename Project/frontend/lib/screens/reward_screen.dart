@@ -1,21 +1,24 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/app_state_provider.dart';
 import '../services/vision_service.dart';
 
-class RewardScreen extends StatefulWidget {
+class RewardScreen extends ConsumerStatefulWidget {
   const RewardScreen({super.key, required this.result});
 
   final VisionResult result;
 
   @override
-  State<RewardScreen> createState() => _RewardScreenState();
+  ConsumerState<RewardScreen> createState() => _RewardScreenState();
 }
 
-class _RewardScreenState extends State<RewardScreen>
+class _RewardScreenState extends ConsumerState<RewardScreen>
     with SingleTickerProviderStateMixin {
   bool _isAnalyzing = true;
+  bool _questResultStored = false;
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
 
@@ -57,6 +60,16 @@ class _RewardScreenState extends State<RewardScreen>
     setState(() {
       _isAnalyzing = false;
     });
+
+    if (!_questResultStored) {
+      ref
+          .read(appStateProvider.notifier)
+          .addQuestResult(
+            label: widget.result.label,
+            confidence: widget.result.confidence,
+          );
+      _questResultStored = true;
+    }
 
     _animationController.forward();
   }

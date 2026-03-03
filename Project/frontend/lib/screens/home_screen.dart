@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_routes.dart';
+import '../providers/app_state_provider.dart';
 import '../services/auth_service.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
   String? _errorMessage;
@@ -52,6 +54,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final progress = ref.watch(appStateProvider.select((state) => state.progress));
+    final logEntries = ref.watch(appStateProvider.select((state) => state.logEntries));
+    final today = DateTime.now();
+    final foundToday = logEntries.where((entry) {
+      final t = entry.timestamp;
+      return t.year == today.year && t.month == today.month && t.day == today.day;
+    }).length;
+    final dailyTarget = 5;
 
     return Scaffold(
       appBar: AppBar(
@@ -103,6 +113,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
+              const SizedBox(height: 4),
+              Text(
+                '🔥 Streak: ${progress.streak} Tag${progress.streak == 1 ? '' : 'e'}',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.secondary,
+                ),
+              ),
               const SizedBox(height: 24),
 
               // User Profile Card
@@ -142,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Stufe 1',
+                                  'Stufe ${progress.level}',
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -165,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: theme.textTheme.labelLarge,
                               ),
                               Text(
-                                '450 / 1000',
+                                '${progress.totalXp} / ${progress.nextLevelXp}',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                 ),
@@ -176,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: LinearProgressIndicator(
-                              value: 0.45,
+                              value: progress.levelProgress,
                               minHeight: 8,
                               backgroundColor: colorScheme.surfaceContainerHighest,
                               valueColor: AlwaysStoppedAnimation<Color>(
@@ -246,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          'Objekte zu finden: 3 / 5',
+                          'Objekte zu finden: $foundToday / $dailyTarget',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: colorScheme.onTertiaryContainer,
                           ),
@@ -267,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       colorScheme,
                       icon: Icons.camera_alt,
                       label: 'Gescannt',
-                      value: '12',
+                      value: '${logEntries.length}',
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -277,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       colorScheme,
                       icon: Icons.check_circle,
                       label: 'Gefunden',
-                      value: '8',
+                      value: '${logEntries.length}',
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -287,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       colorScheme,
                       icon: Icons.star,
                       label: 'Punkte',
-                      value: '450',
+                      value: '${progress.totalXp}',
                     ),
                   ),
                 ],

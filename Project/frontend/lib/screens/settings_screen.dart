@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SettingsScreen extends StatefulWidget {
+import '../models/app_theme_option.dart';
+import '../providers/app_state_provider.dart';
+
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _notifications = true;
   bool _sound = true;
-  String _themeMode = 'system';
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final selectedTheme = ref.watch(appStateProvider.select((state) => state.theme));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Einstellungen')),
@@ -44,25 +48,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ListTile(
                             leading: const Icon(Icons.palette_outlined),
                             title: const Text('Theme'),
-                            subtitle: Text(
-                              _themeMode == 'system'
-                                  ? 'System'
-                                  : (_themeMode == 'light' ? 'Hell' : 'Dunkel'),
-                            ),
+                            subtitle: Text(selectedTheme.label),
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            child: SegmentedButton<String>(
+                            child: SegmentedButton<AppThemeOption>(
                               segments: const [
-                                ButtonSegment(value: 'light', label: Text('Hell')),
-                                ButtonSegment(value: 'system', label: Text('System')),
-                                ButtonSegment(value: 'dark', label: Text('Dunkel')),
+                                ButtonSegment(
+                                  value: AppThemeOption.light,
+                                  label: Text('Hell'),
+                                ),
+                                ButtonSegment(
+                                  value: AppThemeOption.dark,
+                                  label: Text('Dunkel'),
+                                ),
+                                ButtonSegment(
+                                  value: AppThemeOption.system,
+                                  label: Text('System'),
+                                ),
+                                ButtonSegment(
+                                  value: AppThemeOption.retroArcade,
+                                  label: Text('Retro'),
+                                ),
+                                ButtonSegment(
+                                  value: AppThemeOption.adventureMap,
+                                  label: Text('Adventure'),
+                                ),
                               ],
-                              selected: {_themeMode},
+                              selected: {selectedTheme},
                               onSelectionChanged: (value) {
-                                setState(() {
-                                  _themeMode = value.first;
-                                });
+                                ref
+                                    .read(appStateProvider.notifier)
+                                    .setTheme(value.first);
                               },
                             ),
                           ),

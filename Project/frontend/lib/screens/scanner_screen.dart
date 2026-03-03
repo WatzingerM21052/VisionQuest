@@ -147,29 +147,37 @@ class _ScannerScreenState extends State<ScannerScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Camera Preview
-            Expanded(
-              child: Center(
-                child: _buildPreview(theme),
-              ),
-            ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final contentWidth = width > 1200 ? 1000.0 : (width > 900 ? 820.0 : 680.0);
 
-            // Bottom Controls
-            Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainer,
-                border: Border(
-                  top: BorderSide(
-                    color: colorScheme.outlineVariant,
-                  ),
-                ),
-              ),
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: contentWidth),
+                child: Column(
+                  children: [
+                    // Camera Preview
+                    Expanded(
+                      child: Center(
+                        child: _buildPreview(theme),
+                      ),
+                    ),
+
+                    // Bottom Controls
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainer,
+                        border: Border(
+                          top: BorderSide(
+                            color: colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                   // Error Message
                   if (_errorMessage != null)
                     Container(
@@ -222,20 +230,24 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                          const SizedBox(height: 12),
 
-                  // Info Text
-                  Text(
-                    'Positioniere dein Objekt in der Bildmitte',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                          // Info Text
+                          Text(
+                            'Positioniere dein Objekt in der Bildmitte',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

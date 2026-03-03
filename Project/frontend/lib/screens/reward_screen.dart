@@ -74,16 +74,26 @@ class _RewardScreenState extends State<RewardScreen>
           automaticallyImplyLeading: !_isAnalyzing,
         ),
         body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _isAnalyzing
-                    ? _buildAnalyzingState(theme, colorScheme)
-                    : _buildRewardState(theme, colorScheme),
-              ),
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final contentWidth = width > 1000 ? 760.0 : (width > 700 ? 620.0 : 480.0);
+
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: contentWidth),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _isAnalyzing
+                          ? _buildAnalyzingState(theme, colorScheme)
+                          : _buildRewardState(theme, colorScheme),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

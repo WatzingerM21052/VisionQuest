@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_routes.dart';
+import '../models/quest_log_entry.dart';
 import '../providers/app_state_provider.dart';
 import '../services/auth_service.dart';
 
@@ -72,13 +73,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appStateProvider.select((state) => state.logEntries),
     );
     final today = DateTime.now();
-    final foundToday = logEntries.where((entry) {
+    final todayEntries = logEntries.where((entry) {
       final t = entry.timestamp;
       return t.year == today.year &&
           t.month == today.month &&
           t.day == today.day;
-    }).length;
-    final dailyTarget = 5;
+    }).toList();
+    final dailyQuest = _questForDate(today);
+    final foundToday = _countQuestMatches(todayEntries, dailyQuest);
+    final dailyTarget = dailyQuest.requiredCount;
+    final questCompleted = foundToday >= dailyTarget;
 
     return Scaffold(
       appBar: AppBar(
@@ -301,7 +305,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
-                                      Icons.emoji_objects,
+                                      dailyQuest.icon,
                                       size: 28,
                                       color: colorScheme.primary,
                                     ),
@@ -321,7 +325,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Finde geheime Objekte und verdiene Punkte!',
+                                          dailyQuest.description,
                                           style: theme.textTheme.bodySmall,
                                         ),
                                       ],
@@ -339,7 +343,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 decoration: BoxDecoration(
                                   color: colorScheme.tertiaryContainer,
                                   borderRadius: BorderRadius.circular(20),
-                                  boxShadow: foundToday >= dailyTarget
+                                  boxShadow: questCompleted
                                       ? [
                                           BoxShadow(
                                             color: colorScheme.tertiary
@@ -354,13 +358,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      Icons.check_circle,
+                                      questCompleted
+                                          ? Icons.check_circle
+                                          : Icons.flag,
                                       size: 16,
                                       color: colorScheme.onTertiaryContainer,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Objekte zu finden: $foundToday / $dailyTarget',
+                                      '${dailyQuest.progressLabel}: ${foundToday.clamp(0, dailyTarget)} / $dailyTarget',
                                       style: theme.textTheme.labelSmall
                                           ?.copyWith(
                                             color:
@@ -512,6 +518,76 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  _DailyQuest _questForDate(DateTime date) {
+    const quests = <_DailyQuest>[
+      _DailyQuest(
+        description: 'Scanne ein Handy.',
+        targetLabels: ['cell phone'],
+        requiredCount: 1,
+        progressLabel: 'Handys erkannt',
+        icon: Icons.smartphone,
+      ),
+      _DailyQuest(
+        description: 'Scanne zwei Personen.',
+        targetLabels: ['person'],
+        requiredCount: 2,
+        progressLabel: 'Personen erkannt',
+        icon: Icons.groups,
+      ),
+      _DailyQuest(
+        description: 'Scanne eine Tasse oder ein Glas.',
+        targetLabels: ['cup', 'bottle', 'wine glass'],
+        requiredCount: 1,
+        progressLabel: 'Getränke erkannt',
+        icon: Icons.local_drink,
+      ),
+      _DailyQuest(
+        description: 'Scanne ein Buch oder Notebook.',
+        targetLabels: ['book', 'laptop'],
+        requiredCount: 1,
+        progressLabel: 'Lernobjekte erkannt',
+        icon: Icons.menu_book,
+      ),
+      _DailyQuest(
+        description: 'Scanne drei Alltagsobjekte (Stuhl/Backpack/Uhr).',
+        targetLabels: ['chair', 'backpack', 'clock'],
+        requiredCount: 3,
+        progressLabel: 'Alltagsobjekte erkannt',
+        icon: Icons.explore,
+      ),
+      _DailyQuest(
+        description: 'Scanne zwei Tech-Objekte (Maus/Tastatur/Monitor).',
+        targetLabels: ['mouse', 'keyboard', 'tv'],
+        requiredCount: 2,
+        progressLabel: 'Tech-Objekte erkannt',
+        icon: Icons.computer,
+      ),
+    ];
+
+    final dayKey =
+        DateTime(
+          date.year,
+          date.month,
+          date.day,
+        ).difference(DateTime(2025, 1, 1)).inDays %
+        quests.length;
+    return quests[dayKey];
+  }
+
+  int _countQuestMatches(List<QuestLogEntry> entries, _DailyQuest quest) {
+    var matches = 0;
+    for (final entry in entries) {
+      final normalized = entry.label.toLowerCase();
+      final isMatch = quest.targetLabels.any(
+        (target) => normalized.contains(target),
+      );
+      if (isMatch) {
+        matches++;
+      }
+    }
+    return matches;
+  }
+
   Widget _buildStatCard(
     ThemeData theme,
     ColorScheme colorScheme, {
@@ -572,4 +648,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
+}
+
+class _DailyQuest {
+  const _DailyQuest({
+    required this.description,
+    required this.targetLabels,
+    required this.requiredCount,
+    required this.progressLabel,
+    required this.icon,
+  });
+
+  final String description;
+  final List<String> targetLabels;
+  final int requiredCount;
+  final String progressLabel;
+  final IconData icon;
 }

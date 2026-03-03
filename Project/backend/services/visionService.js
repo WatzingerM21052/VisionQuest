@@ -38,8 +38,16 @@ async function detectImage(buffer) {
         // Decode image buffer using Jimp
         const image = await Jimp.read(buffer);
 
-        // Resize to 416x416 (good size for COCO-SSD)
-        image.resize(416, 416);
+        if (typeof image.exifRotate === 'function') {
+            image.exifRotate();
+        }
+
+        // Preserve aspect ratio for better detection quality
+        const maxSide = 640;
+        const scale = Math.min(maxSide / image.bitmap.width, maxSide / image.bitmap.height, 1);
+        const targetWidth = Math.max(1, Math.round(image.bitmap.width * scale));
+        const targetHeight = Math.max(1, Math.round(image.bitmap.height * scale));
+        image.resize(targetWidth, targetHeight, Jimp.RESIZE_BILINEAR);
 
         // Convert Jimp image to tensor3d
         const pixels = image.bitmap.data;
@@ -56,7 +64,7 @@ async function detectImage(buffer) {
         const imageTensor = tf.tidy(() => {
             return tf.tensor3d(
                 rgbPixels,
-                [416, 416, 3],
+                [targetHeight, targetWidth, 3],
                 'int32'
             );
         });
@@ -75,7 +83,7 @@ async function detectImage(buffer) {
 
             // Filter by confidence threshold and sort
             const filtered = predictions
-                .filter(p => p.score > 0.3)
+                .filter(p => p.score > 0.2)
                 .sort((a, b) => b.score - a.score);
 
             if (filtered.length === 0) {

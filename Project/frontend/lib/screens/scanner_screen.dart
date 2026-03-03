@@ -46,11 +46,17 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
       final controller = CameraController(
         cameras.first,
-        ResolutionPreset.medium,
+        ResolutionPreset.high,
         enableAudio: false,
       );
 
       await controller.initialize();
+      try {
+        await controller.setFocusMode(FocusMode.auto);
+      } catch (_) {}
+      try {
+        await controller.setExposureMode(ExposureMode.auto);
+      } catch (_) {}
 
       if (!mounted) {
         return;
@@ -316,29 +322,46 @@ class _ScannerScreenState extends State<ScannerScreen> {
       );
     }
 
-    return Stack(
-      children: [
-        AspectRatio(
-          aspectRatio: _controller!.value.aspectRatio,
-          child: CameraPreview(_controller!),
-        ),
-        // Crosshair overlay
-        Positioned.fill(
-          child: Center(
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: colorScheme.primary.withValues(alpha: 0.6),
-                  width: 2,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final shortestSide = constraints.biggest.shortestSide;
+        final overlayDiameter = (shortestSide * 0.62).clamp(240.0, 380.0);
+
+        return Stack(
+          children: [
+            AspectRatio(
+              aspectRatio: _controller!.value.aspectRatio,
+              child: CameraPreview(_controller!),
+            ),
+            Positioned.fill(
+              child: Container(color: Colors.black.withValues(alpha: 0.12)),
+            ),
+            Positioned.fill(
+              child: Center(
+                child: Container(
+                  width: overlayDiameter,
+                  height: overlayDiameter,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.transparent,
+                    border: Border.all(
+                      color: colorScheme.primary.withValues(alpha: 0.88),
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withValues(alpha: 0.28),
+                        blurRadius: 14,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

@@ -98,12 +98,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final isDesktop = width >= 1100;
             final isWideDesktop = width >= 1500;
             final contentWidth = isWideDesktop
-                ? 1240.0
-                : (isDesktop ? 1080.0 : (width > 900 ? 820.0 : 640.0));
+                ? 1120.0
+                : (isDesktop ? 960.0 : (width > 900 ? 820.0 : 640.0));
             final horizontalPadding = isWideDesktop
-                ? 36.0
-                : (isDesktop ? 28.0 : 16.0);
-            final verticalPadding = isDesktop ? 20.0 : 16.0;
+                ? 24.0
+                : (isDesktop ? 20.0 : 16.0);
+            final verticalPadding = isDesktop ? 16.0 : 14.0;
 
             return Center(
               child: ConstrainedBox(
@@ -116,11 +116,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Logo - Full Width
-                      Image.asset(
-                        'assets/Startlogo.png',
-                        width: double.infinity,
-                        fit: BoxFit.contain,
+                      // Logo - fancy rounded frame
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.35),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colorScheme.shadow.withValues(alpha: 0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: Image.asset(
+                            'assets/Startlogo.png',
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 28),
 
@@ -130,11 +151,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         style: theme.textTheme.headlineMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w700,
-                          fontSize: isDesktop
-                              ? (theme.textTheme.headlineMedium?.fontSize ??
-                                        20) +
-                                    2
-                              : theme.textTheme.headlineMedium?.fontSize,
                         ),
                       ),
                       const SizedBox(height: 6),

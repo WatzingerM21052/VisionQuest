@@ -94,7 +94,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                   ButtonSegment(
                                     value: AppThemeOption.adventureMap,
-                                    label: Text('Map'),
+                                    label: Text('Abenteuer'),
                                   ),
                                 ],
                                 selected: {selectedTheme},

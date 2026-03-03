@@ -1,18 +1,22 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_routes.dart';
+import '../models/detection_focus_option.dart';
+import '../models/detection_model_option.dart';
+import '../providers/app_state_provider.dart';
 import '../services/auth_service.dart';
 import '../services/vision_service.dart';
 
-class ScannerScreen extends StatefulWidget {
+class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
 
   @override
-  State<ScannerScreen> createState() => _ScannerScreenState();
+  ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen> {
+class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   final _authService = AuthService();
   final _visionService = VisionService();
 
@@ -91,9 +95,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
       }
 
       final image = await _controller!.takePicture();
+      final appState = ref.read(appStateProvider);
       final result = await _visionService.detectObject(
         image: image,
         token: token,
+        model: appState.detectionModel.apiValue,
+        focus: appState.detectionFocus.apiValue,
       );
 
       if (!mounted) {
@@ -124,6 +131,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final detectionModel = ref.watch(
+      appStateProvider.select((state) => state.detectionModel),
+    );
+    final detectionFocus = ref.watch(
+      appStateProvider.select((state) => state.detectionFocus),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -243,6 +256,40 @@ class _ScannerScreenState extends State<ScannerScreen> {
                             ),
                             style: FilledButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.tune,
+                                    size: 14,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${detectionModel.label} · ${detectionFocus.label}',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
 

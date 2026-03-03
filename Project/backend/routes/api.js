@@ -248,7 +248,13 @@ router.post('/vision/detect', authenticateToken, upload.single('image'), async (
             });
         }
 
-        const result = await visionService.detectImage(req.file.buffer);
+        const preferredModel = (req.headers['x-vision-model'] || 'yolo').toString().toLowerCase();
+        const focusMode = (req.headers['x-vision-focus'] || 'balanced').toString().toLowerCase();
+
+        const result = await visionService.detectImage(req.file.buffer, {
+            preferredModel,
+            focusMode
+        });
 
         console.log('[VISION] Detection result:', {
             label: result.label,

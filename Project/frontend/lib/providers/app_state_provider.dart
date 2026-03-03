@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/app_state.dart';
 import '../models/app_theme_option.dart';
+import '../models/detection_focus_option.dart';
+import '../models/detection_model_option.dart';
 import '../models/quest_log_entry.dart';
 import '../models/quest_progress.dart';
 
@@ -36,6 +38,14 @@ class AppStateNotifier extends StateNotifier<AppState> {
   /// Parameter: [option] - Ein [AppThemeOption] Value (light, dark, system, etc.)
   void setTheme(AppThemeOption option) {
     state = state.copyWith(theme: option);
+  }
+
+  void setDetectionModel(DetectionModelOption option) {
+    state = state.copyWith(detectionModel: option);
+  }
+
+  void setDetectionFocus(DetectionFocusOption option) {
+    state = state.copyWith(detectionFocus: option);
   }
 
   /// Verarbeitet einen neuen Quest-Erfolg (Objekterkennung).

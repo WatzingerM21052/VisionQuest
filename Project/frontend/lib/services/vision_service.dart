@@ -45,6 +45,8 @@ class VisionService {
   Future<VisionResult> detectObject({
     required XFile image,
     required String token,
+    String model = 'yolo',
+    String focus = 'balanced',
   }) async {
     final bytes = await image.readAsBytes();
     final fileName = image.name.isNotEmpty ? image.name : 'image.jpg';
@@ -54,6 +56,8 @@ class VisionService {
       Uri.parse('$baseUrl/vision/detect'),
     );
     request.headers['Authorization'] = 'Bearer $token';
+    request.headers['x-vision-model'] = model;
+    request.headers['x-vision-focus'] = focus;
     request.files.add(
       http.MultipartFile.fromBytes('image', bytes, filename: fileName),
     );

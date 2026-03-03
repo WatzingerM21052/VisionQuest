@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/app_theme_option.dart';
+import '../models/detection_focus_option.dart';
+import '../models/detection_model_option.dart';
 import '../providers/app_state_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -21,6 +23,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final colorScheme = theme.colorScheme;
     final selectedTheme = ref.watch(
       appStateProvider.select((state) => state.theme),
+    );
+    final selectedModel = ref.watch(
+      appStateProvider.select((state) => state.detectionModel),
+    );
+    final selectedFocus = ref.watch(
+      appStateProvider.select((state) => state.detectionFocus),
     );
 
     return Scaffold(
@@ -104,6 +112,82 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       .setTheme(value.first);
                                 },
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.center_focus_strong),
+                            title: const Text('Erkennungsmodus'),
+                            subtitle: Text(
+                              '${selectedModel.label} · ${selectedFocus.label}',
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Modell',
+                                style: theme.textTheme.labelLarge,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            child: SegmentedButton<DetectionModelOption>(
+                              segments: const [
+                                ButtonSegment(
+                                  value: DetectionModelOption.yolo,
+                                  label: Text('YOLO'),
+                                ),
+                                ButtonSegment(
+                                  value: DetectionModelOption.cocoSsd,
+                                  label: Text('COCO-SSD'),
+                                ),
+                              ],
+                              selected: {selectedModel},
+                              onSelectionChanged: (value) {
+                                ref
+                                    .read(appStateProvider.notifier)
+                                    .setDetectionModel(value.first);
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Fokus',
+                                style: theme.textTheme.labelLarge,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            child: SegmentedButton<DetectionFocusOption>(
+                              segments: const [
+                                ButtonSegment(
+                                  value: DetectionFocusOption.strict,
+                                  label: Text('Strict'),
+                                ),
+                                ButtonSegment(
+                                  value: DetectionFocusOption.balanced,
+                                  label: Text('Balanced'),
+                                ),
+                              ],
+                              selected: {selectedFocus},
+                              onSelectionChanged: (value) {
+                                ref
+                                    .read(appStateProvider.notifier)
+                                    .setDetectionFocus(value.first);
+                              },
                             ),
                           ),
                         ],

@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
 
   bool _isLoading = false;
+  bool _showPassword = false;
   String? _errorMessage;
 
   @override
@@ -74,9 +75,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -88,23 +89,44 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Logo
+                    Align(
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/Startlogo.png',
+                        height: 100,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Header
                     Text(
-                      'Willkommen zurueck',
-                      style: theme.textTheme.headlineMedium,
+                      'Willkommen zurück',
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        color: colorScheme.primary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
-                      'Melde dich mit deinem Konto an.',
-                      style: theme.textTheme.bodyMedium,
+                      'Melde dich an um dein Abenteuer fortzusetzen',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
+
+                    // Email Field
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'E-Mail',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.email),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
@@ -112,19 +134,36 @@ class _LoginScreenState extends State<LoginScreen> {
                           return 'Bitte E-Mail eingeben.';
                         }
                         if (!value.contains('@')) {
-                          return 'Bitte eine gueltige E-Mail eingeben.';
+                          return 'Bitte eine gültige E-Mail eingeben.';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
+
+                    // Password Field
                     TextFormField(
                       controller: _passwordController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Passwort',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showPassword = !_showPassword;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: !_showPassword,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Bitte Passwort eingeben.';
@@ -135,34 +174,104 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
+
+                    // Error Message
                     if (_errorMessage != null)
-                      Text(
-                        _errorMessage!,
-                        style: TextStyle(color: theme.colorScheme.error),
-                        textAlign: TextAlign.center,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colorScheme.error),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: colorScheme.error),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     if (_errorMessage != null) const SizedBox(height: 16),
+
+                    // Login Button
                     FilledButton(
                       onPressed: _isLoading ? null : _handleLogin,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
                             )
-                          : const Text('Login'),
+                          : const Text('Anmelden'),
                     ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterScreen(),
+                    const SizedBox(height: 16),
+
+                    // Divider
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: colorScheme.outlineVariant,
                           ),
-                        );
-                      },
-                      child: const Text('Noch kein Konto? Registrieren'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'oder',
+                            style: theme.textTheme.labelSmall,
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Register Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Noch kein Konto?',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterScreen(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'Jetzt registrieren',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

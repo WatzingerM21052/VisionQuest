@@ -19,6 +19,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _authService = AuthService();
 
   bool _isLoading = false;
+  bool _showPassword = false;
+  bool _showConfirm = false;
   String? _errorMessage;
 
   @override
@@ -78,9 +80,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrieren')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -92,23 +94,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Logo
+                    Align(
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/Startlogo.png',
+                        height: 100,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Header
                     Text(
                       'Konto erstellen',
-                      style: theme.textTheme.headlineMedium,
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        color: colorScheme.primary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
-                      'Erstelle dein VisionQuest Konto.',
-                      style: theme.textTheme.bodyMedium,
+                      'Tritt VisionQuest bei und finde geheime Objekte',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
+
+                    // Username Field
                     TextFormField(
                       controller: _usernameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Benutzername',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -121,11 +144,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
+
+                    // Email Field
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'E-Mail',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.email),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
@@ -133,19 +161,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return 'Bitte E-Mail eingeben.';
                         }
                         if (!value.contains('@')) {
-                          return 'Bitte eine gueltige E-Mail eingeben.';
+                          return 'Bitte eine gültige E-Mail eingeben.';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
+
+                    // Password Field
                     TextFormField(
                       controller: _passwordController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Passwort',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showPassword = !_showPassword;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: !_showPassword,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Bitte Passwort eingeben.';
@@ -157,47 +202,134 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
+
+                    // Confirm Password Field
                     TextFormField(
                       controller: _confirmController,
-                      decoration: const InputDecoration(
-                        labelText: 'Passwort bestaetigen',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: 'Passwort bestätigen',
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showConfirm
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showConfirm = !_showConfirm;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: !_showConfirm,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Bitte Passwort bestaetigen.';
+                          return 'Bitte Passwort bestätigen.';
                         }
                         if (value != _passwordController.text) {
-                          return 'Passwoerter stimmen nicht ueberein.';
+                          return 'Passwörter stimmen nicht überein.';
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
+
+                    // Error Message
                     if (_errorMessage != null)
-                      Text(
-                        _errorMessage!,
-                        style: TextStyle(color: theme.colorScheme.error),
-                        textAlign: TextAlign.center,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colorScheme.error),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: colorScheme.error),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     if (_errorMessage != null) const SizedBox(height: 16),
+
+                    // Register Button
                     FilledButton(
                       onPressed: _isLoading ? null : _handleRegister,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
                             )
                           : const Text('Registrieren'),
                     ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Bereits ein Konto? Zum Login'),
+                    const SizedBox(height: 16),
+
+                    // Divider
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: colorScheme.outlineVariant,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'oder',
+                            style: theme.textTheme.labelSmall,
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Login Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Bereits ein Konto?',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            'Zum Login',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

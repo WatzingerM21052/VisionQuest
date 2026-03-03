@@ -1,9 +1,9 @@
 # VisionQuest - Projektdokumentation
 
 **Projekt:** VisionQuest - AR-basierte Objekterkennungs-Quest-App  
-**Sprache:** Dart/Flutter  
-**Version:** 1.0.0  
-**Status:** ✅ Vollständig abgeschlossen (21 Steps über 3 Phasen)  
+**Sprache:** Dart/Flutter + Python (ML)  
+**Version:** 2.0.0  
+**Status:** ✅ Vollständig abgeschlossen (30 Steps über 4 Phasen)  
 **Datum:** März 2026
 
 ---
@@ -12,7 +12,7 @@
 
 1. [Projektübersicht](#projektübersicht)
 2. [Architektur](#architektur)
-3. [Implementierung - Phase 1-3](#implementierung)
+3. [Implementierung - Phase 1-4](#implementierung)
 4. [Features](#features)
 5. [Technical Stack](#technical-stack)
 6. [Setup & Installation](#setup--installation)
@@ -28,11 +28,14 @@ VisionQuest ist eine Flutter-basierte Mobile-Anwendung, die Benutzern ermöglich
 
 ### Kernfeatures
 - 🎮 **Quest-System**: Objekte scannen → XP verdienen → Level aufsteigen
+- 🔄 **Daily Quest Rotation**: 6 täglich wechselnde Ziele (model-kompatibel)
+- 🤖 **Dual Detection Models**: YOLO v11 + COCO-SSD mit umschaltbarem Fokus-Modus
+- 🎯 **Circle-Focused Scanning**: Kreis-basierte Objekterkennung mit Context-Expansion
 - 🎨 **5 Themes**: Light, Dark, System, RetroArcade, AdventureMap
 - 📱 **Responsive Design**: Mobile + Tablet-unterstützt
 - 🔥 **Streak-Tracking**: Konsekutive Tage mit Quests
-- 📊 **Quest-Log**: Historie aller gefundenen Objekte
-- ✨ **Animationen**: Lottie-Animationen + UI-Transitions
+- 📊 **Quest-Log**: Historie aller gefundenen Objekte mit Confidence-Anzeige
+- ✨ **Animationen**: Multi-URL Lottie-Fallback + UI-Transitions
 
 ### Zielplattformen
 - iOS 12.0+
@@ -68,8 +71,10 @@ lib/
   ├── app_routes.dart              # Named Route Konstanten
   │
   ├── models/                      # Data Classes (Immutable)
-  │   ├── app_state.dart           # Root State Container
+  │   ├── app_state.dart           # Root State Container + Detection Preferences
   │   ├── app_theme_option.dart    # Theme Enum (5 Varianten)
+  │   ├── detection_model_option.dart  # YOLO vs COCO-SSD Enum
+  │   ├── detection_focus_option.dart  # Strict vs Balanced Focus Enum
   │   ├── quest_progress.dart      # Level/XP/Streak Tracking
   │   └── quest_log_entry.dart     # Einzelner Quest-Erfolg
   │
@@ -77,11 +82,11 @@ lib/
   │   └── app_state_provider.dart  # GlobalStateNotifier
   │
   ├── screens/                     # UI Screens (6 Total)
-  │   ├── home_screen.dart         # Haupt-Dashboard mit Pulse-Animation
-  │   ├── scanner_screen.dart      # Camera-Interface für Objektscanning
-  │   ├── reward_screen.dart       # Quest-Ergebnis mit Lottie-Animation
-  │   ├── quest_log_screen.dart    # Historie mit Timestamp-Formatting
-  │   ├── settings_screen.dart     # Theme-Auswahl (5 Optionen)
+  │   ├── home_screen.dart         # Haupt-Dashboard mit Daily Quest Rotation
+  │   ├── scanner_screen.dart      # Camera mit 62% Circle + Model-Status-Anzeige
+  │   ├── reward_screen.dart       # Quest-Ergebnis mit Multi-URL Lottie-Fallback
+  │   ├── quest_log_screen.dart    # Grid-Layout mit Confidence-Balken
+  │   ├── settings_screen.dart     # Theme + Detection Model + Focus Mode
   │   ├── login_screen.dart        # Auth-Einstieg
   │   └── register_screen.dart     # Neue Benutzer Registrierung
   │
@@ -246,24 +251,221 @@ Dokumentierte Public APIs:
 - ✅ flutter analyze: **No issues found!**
 - Alle 6 Screens + Animations + Routing + State Management + Docs integriert
 
+### Phase 4: Vision System Upgrades & Polish ✅ (9 Steps)
+
+#### **Step 1: Logo Frame Removal**
+- User-Feedback: Rahmen um Logo zu weit außen
+- Iterative Anpassung → finale Entscheidung: Frame komplett entfernt
+- Logo zeigt sich jetzt ohne Border-Overlay
+
+#### **Step 2: Scanner Circle Vergrößerung**
+- Problem: Kreis zu klein (200px statisch)
+- Lösung: Responsive Sizing mit LayoutBuilder
+- Berechnung: `shortestSide * 0.62` (clamped 240-380px)
+- Dynamische Anpassung an Geräteauflösung
+
+#### **Step 3: Daily Quest Rotation System**
+Implementierung von 6 täglich wechselnden Quests:
+- **Quest 0**: 📱 1 Handy scannen
+- **Quest 1**: 👥 2 Personen scannen
+- **Quest 2**: ☕ 1 Tasse/Flasche/Weinglas scannen
+- **Quest 3**: 📚 1 Buch/Laptop scannen
+- **Quest 4**: 🪑 3 Alltagsobjekte (Stuhl/Rucksack/Uhr) scannen
+- **Quest 5**: 🖱️ 2 Technik-Items (Maus/Tastatur/TV) scannen
+
+**Logik:**
+```dart
+int _questForDate(DateTime date) {
+  final daysSinceEpoch = date.difference(DateTime(2020, 1, 1)).inDays;
+  return daysSinceEpoch % 6;
+}
+```
+
+**Quest-Match-Zählung:**
+- Scanner-Result Labels werden gegen Quest-Targets geprüft
+- Log-Entries filtern nach target-Strings
+- UI zeigt Fortschritt: "2 / 3" mit Dynamic Color (incomplete/complete)
+
+#### **Step 4: YOLO v11 Integration**
+**Backend Enhancement:**
+- Python-Subprocess-Ansatz für Ultralytics YOLO v11
+- `yolo_detect.py` mit importlib (vermeidet Lint-Warnings)
+- Environment-Variablen:
+  - `VISION_YOLO_MODEL` (default: yolo11n.pt)
+  - `VISION_YOLO_CONF` (default: 0.20)
+  - `VISION_YOLO_IMGSZ` (default: 640)
+
+**Detection Pipeline:**
+```javascript
+// visionService.js - YOLO First Approach
+async function detectImage(imagePath, preferredModel, focusMode) {
+  if (preferredModel === 'yolo') {
+    try {
+      return await detectWithYolo(imagePath, focusRegion, focusMode);
+    } catch (error) {
+      // Fallback to COCO-SSD
+    }
+  }
+  return await detectWithCOCO(imagePath, focusRegion, focusMode);
+}
+```
+
+**Dependencies:**
+- Ultralytics 8.4.19 (Python Package)
+- Python 3.13.7 (System Environment)
+- Jimp 0.22.10 (Bildverarbeitung)
+
+#### **Step 5: Circle-Intersection Detection**
+**Filtering-Logik:**
+- Nur Objekte im/nahe Scanner-Kreis werden erkannt
+- `rectIntersectsCircle()` Algorithmus:
+  ```javascript
+  function rectIntersectsCircle(rect, circle) {
+    const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
+    const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
+    const distX = circle.x - closestX;
+    const distY = circle.y - closestY;
+    return (distX * distX + distY * distY) <= (circle.radius * circle.radius);
+  }
+  ```
+
+**Focus Crop mit Context-Expansion:**
+- `createFocusCrop()` erstellt ROI (Region of Interest)
+- **Strict Mode**: 1.35x Context-Scale (wenig Hintergrund)
+- **Balanced Mode**: 1.85x Context-Scale (mehr Kontext für teilweise Objekte)
+- Crop wird an YOLO/COCO weitergegeben, Koordinaten zurück-transformiert
+
+#### **Step 6: Detection Model Switch UI**
+**Settings-Screen Erweiterung:**
+- Neue "Erkennungsmodus" Card mit SegmentedButton
+- Optionen: **YOLO** (Standard) | **COCO-SSD**
+- Labels mit Icons (Icons.precision_manufacturing / Icons.image_search)
+
+**State Management:**
+```dart
+// app_state.dart
+final DetectionModelOption detectionModel;  // yolo | cocoSsd
+
+// app_state_provider.dart
+void setDetectionModel(DetectionModelOption model) {
+  state = state.copyWith(detectionModel: model);
+}
+```
+
+**API-Integration:**
+- Frontend sendet Header: `x-vision-model: yolo` oder `coco`
+- Backend wählt entsprechende Pipeline
+
+#### **Step 7: Detection Focus Switch UI**
+**Settings-Screen zweiter SegmentedButton:**
+- Optionen: **Strict** (Standard) | **Balanced**
+- Labels: "Strikt (nur Kreis)" | "Ausgewogen (mit Kontext)"
+
+**Auswirkung:**
+- Header: `x-vision-focus: strict` oder `balanced`
+- Backend nutzt 1.35x vs 1.85x contextScale
+- Strict = weniger Fehlerkennungen, Balanced = bessere Erkennung bei teilweise sichtbaren Objekten
+
+**Scanner-Status-Anzeige:**
+Kleiner Chip zeigt aktive Konfiguration:
+```
+┌─────────────────────────┐
+│ 🤖 YOLO · Strict        │
+└─────────────────────────┘
+```
+
+#### **Step 8: Log Card Overflow Fix**
+**Problem:** "Bottom overloaded by 20 pixels" bei längeren Object-Namen
+
+**Vorher:**
+```dart
+GridView.builder(
+  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+    childAspectRatio: 0.75,  // ← Instabil bei Theme-Font-Changes
+  ),
+)
+```
+
+**Nachher:**
+```dart
+GridView.builder(
+  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+    mainAxisExtent: width > 700 ? 250 : 242,  // ← Feste Höhe
+  ),
+)
+```
+
+**Vorteile:**
+- Keine Overflow-Errors mehr
+- Stabil bei Theme-Wechsel
+- Konsistentes Layout über alle Geräte
+
+#### **Step 9: Multi-URL Lottie Fallback**
+**Problem:** `assets.lottiefiles.com` liefert 403 Errors
+
+**Lösung:** Dreistufige Fallback-Kette
+```dart
+Widget _buildLottieWithFallback({
+  required String primaryUrl,
+  required String secondaryUrl,
+  required Widget fallback,
+  bool repeat = true,
+  bool reverse = false,
+}) {
+  return Lottie.network(
+    primaryUrl,
+    errorBuilder: (context, error, stackTrace) {
+      return Lottie.network(
+        secondaryUrl,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      );
+    },
+  );
+}
+```
+
+**Anwendung:**
+- **Analyzing-State**: `lf20_jcikwtux.json` → `lottie.host` → CircularProgressIndicator
+- **Reward-State**: `lf20_03ylnp7e.json` → `lottie.host` → TweenAnimationBuilder mit Icon
+
+**Validierung:**
+- ✅ flutter analyze: No issues
+- User sieht nie eine Error-Message
+- Graceful Degradation zu Material Widgets
+
 ---
 
 ## Features
 
 ### 🎮 Quest-System
 **Ablauf:**
-1. User öffnet Scanner-Screen
-2. Kamera erfasst Objekt
-3. Vision-Service erkennt Objekt + Genauigkeit
-4. Reward-Screen zeigt XP + animiert Erfolg
-5. Quest-Ergebnis wird in globalem State gespeichert
-6. Home-Screen aktualisiert Level/XP/Streak live
-7. QuestLog zeigt Historie mit Timestamp
+1. User öffnet Scanner-Screen mit Dynamic Circle (62% der kürzesten Bildschirmseite)
+2. Model/Focus-Modus aus Settings wird geladen (YOLO/COCO + Strict/Balanced)
+3. Kamera erfasst Objekt im Fokus-Kreis
+4. Vision-Service (Backend) erkennt Objekt:
+   - YOLO v11: Python-Subprocess mit Ultralytics
+   - COCO-SSD: TensorFlow.js mit 80 Klassen
+   - Circle-Intersection-Filter angewendet
+5. Reward-Screen zeigt XP + Multi-URL Lottie-Animation
+6. Quest-Ergebnis wird in globalem State gespeichert
+7. Home-Screen aktualisiert Level/XP/Streak + Daily Quest Progress
+8. QuestLog zeigt Historie mit Confidence-Bar
+
+**Daily Quest System:**
+- 6 rotierende Quests (wechseln täglich basierend auf Datum)
+- Quest-Targets sind model-kompatibel (COCO/YOLO-Klassen)
+- Fortschritt wird live gezählt: gesammelte vs benötigte Objekte
+- Beispiele:
+  - 📱 "Scanne 1 Handy" → Target: ["cell phone"]
+  - 👥 "Scanne 2 Personen" → Target: ["person"]
+  - ☕ "Scanne 1 Tasse oder Flasche" → Target: ["cup", "bottle", "wine glass"]
+  - 🪑 "Scanne 3 Alltagsobjekte" → Target: ["chair", "backpack", "clock"]
 
 **XP-Berechnung:**
 - Base: 10 XP (für 0% Confidence)
 - Max: 100 XP (für 100% Confidence)
 - Linear skaliert basierend auf Vision-Genauigkeit
+- Formula: `10 + (confidence * 90)`
 
 **Level-System:**
 - 1000 XP pro Level
@@ -311,12 +513,45 @@ LayoutBuilder(
 )
 ```
 
+### 🤖 Detection Models & Focus Modes
+**YOLO v11 (via Python Subprocess):**
+- Model: yolo11n.pt (Nano-Variante, schnell)
+- Confidence Threshold: 0.20
+- Image Size: 640x640
+- Erkennt 80+ COCO-Klassen
+- Vorteil: Höhere Genauigkeit, weniger False Positives
+
+**COCO-SSD (TensorFlow.js):**
+- Model: @tensorflow-models/coco-ssd 2.2.3
+- Confidence Threshold: 0.60
+- Erkennt 80 Standard COCO-Klassen
+- Vorteil: Rein JavaScript, kein Python nötig
+
+**Focus Modes:**
+- **Strict (1.35x Context)**: Minimal Hintergrund, nur Objekte nahe/im Kreis
+- **Balanced (1.85x Context)**: Mehr Kontext für teilweise sichtbare Objekte
+
+**Circle-Intersection Filtering:**
+- Nur Predictions die den Scanner-Kreis schneiden werden akzeptiert
+- Verhindert Hintergrund-Erkennungen
+- Berechnung: Closest-Point Distance zwischen Bounding-Box und Kreis-Center
+
+**User-Settings:**
+Switches in Settings-Screen:
+```
+┌─ Erkennungsmodus ─────────────┐
+│ Model:  [YOLO] [COCO-SSD]    │
+│ Fokus:  [Strict] [Balanced]  │
+└───────────────────────────────┘
+```
+
 ### ✨ Animations
 | Element | Animation | Duration | Effect |
 |---------|-----------|----------|--------|
 | Streak Counter | Pulse Scale | 1500ms | 1.0 ⇄ 1.15 |
 | XP Progress-Bar | Glow Shadow | Static | BoxShadow mit Primary |
-| Reward Success | Lottie + Scale | 900ms | Celebration Effect |
+| Reward Success | Multi-URL Lottie + Scale | 900ms | Celebration Effect mit Fallback |
+| Reward Analyzing | Multi-URL Lottie Spinner | Continuous | Loading mit Fallback |
 | Navigation | Slide | 400ms | Right → Left |
 
 ### 🔐 Authentication
@@ -334,18 +569,32 @@ LayoutBuilder(
 - **Language:** Dart (null-safe)
 - **State Mgmt:** Riverpod 2.6.1 (StateNotifier Pattern)
 - **Design:** Material You (useMaterial3: true)
-- **Animations:** Lottie 3.1.2 + Flutter Built-in
-- **Camera:** camera 0.11.0+2
+- **Animations:** Lottie 3.1.2 + Flutter Built-in (Multi-URL Fallback)
+- **Camera:** camera 0.11.0+2 (responsive circle 62% sizing)
 - **Storage:** flutter_secure_storage 9.2.4
-- **HTTP:** http 1.6.0
+- **HTTP:** http 1.6.0 (mit Custom Headers für Model/Focus)
 
-### Backend (Separate Node.js Project)
-- **Server:** Node.js + Express
-- **Database:** SQL (Schema-based)
+### Backend (Node.js + Python ML)
+- **Server:** Node.js 16+ + Express 5.2.1
+- **Database:** SQLite3 (Schema-based)
+- **Image Processing:** Jimp 0.22.10 (Preprocessing, EXIF rotation)
+- **ML Detection:**
+  - **YOLO v11:** Ultralytics 8.4.19 (Python 3.13.7 Subprocess)
+  - **COCO-SSD:** TensorFlow.js 4.11.0 + @tensorflow-models/coco-ssd 2.2.3
 - **APIs:**
   - Authentication: /auth/login, /auth/register
-  - Vision: /api/vision (ML Vision Integration)
+  - Vision: /api/vision/detect (mit Model/Focus Headers)
   - Database: /api/db/* (CRUD Operations)
+
+### Python ML Environment
+- **Python:** 3.13.7 (System Environment: c:/python313/python.exe)
+- **ML Framework:** Ultralytics 8.4.19 (YOLO v11)
+- **Model:** yolo11n.pt (Nano, ~6MB, auto-download)
+- **Integration:** Subprocess spawn mit candidate commands (py, python, python3)
+- **Environment Variables:**
+  - `VISION_YOLO_MODEL` - Model-Pfad (default: yolo11n.pt)
+  - `VISION_YOLO_CONF` - Confidence Threshold (default: 0.20)
+  - `VISION_YOLO_IMGSZ` - Input Image Size (default: 640)
 
 ### Build & Deployment
 - **Build System:** Flutter (gradle für Android)
@@ -361,7 +610,8 @@ LayoutBuilder(
 - Flutter SDK 3.10.3+
 - Dart 3.0+
 - Android SDK / Xcode (für Zielplattform)
-- Node.js 16+ (für Backend, separat)
+- Node.js 16+ (für Backend)
+- Python 3.13+ (für YOLO Detection, optional wenn nur COCO-SSD verwendet wird)
 
 ### Installation Frontend
 
@@ -397,7 +647,7 @@ frontend/
 └── build/                     # Build Output
 ```
 
-### Backend Setup (separat)
+### Backend Setup
 
 ```bash
 cd c:\Users\matth\OneDrive\Desktop\WMC-Projekt_5a\Project\backend
@@ -411,6 +661,32 @@ npm start  # oder: npm run dev
 # Teste Backend
 npm test
 ```
+
+### Python ML Setup (für YOLO Detection)
+
+```bash
+# Python Package installieren (global oder venv)
+pip install ultralytics==8.4.19
+
+# Test YOLO Installation
+python -c "from ultralytics import YOLO; print('YOLO OK')"
+
+# Optional: Model vorher downloaden (sonst auto-download bei erstem Request)
+python -c "from ultralytics import YOLO; YOLO('yolo11n.pt')"
+```
+
+**Environment Variables (Backend .env):**
+```bash
+# Optional: Custom YOLO Config
+VISION_YOLO_MODEL=yolo11n.pt
+VISION_YOLO_CONF=0.20
+VISION_YOLO_IMGSZ=640
+```
+
+**Troubleshooting Python:**
+- Stelle sicher Python in PATH ist: `python --version` oder `py --version`
+- Backend versucht automatisch: `py`, `python`, `python3` commands
+- Bei Fehler: Backend fällt automatisch auf COCO-SSD zurück
 
 ---
 
@@ -629,9 +905,29 @@ flutter run
 - Debug: `ref.watch(appStateProvider)` um State zu inspizieren
 
 #### **Lottie-Animation lädt nicht**
-- Check: Internet-Verbindung aktiv
-- Check: lottie.host URL erreichbar
-- Fallback: Material-Icon wird angezeigt
+- Multi-URL Fallback ist implementiert (Primary → Secondary → Local Widget)
+- Bei Fehlern werden Material Icons/Widgets als Fallback angezeigt
+- Check: Console für 403 Errors (sollte keine geben dank Fallback)
+- Optional: Lottie-Dateien lokal in `assets/` speichern und Pfade anpassen
+
+#### **YOLO Detection funktioniert nicht**
+- Check: Python installiert und in PATH (`python --version`)
+- Check: Ultralytics installiert (`pip list | grep ultralytics`)
+- Check: Backend Logs für Python-Subprocess Errors
+- Fallback: App nutzt automatisch COCO-SSD wenn YOLO fehlschlägt
+- Alternative: In Settings auf "COCO-SSD" Model umschalten
+
+#### **Scanner erkennt Objekte nicht im Kreis**
+- Stelle sicher Objekt schneidet den Kreis (nicht nur berührt)
+- Wenn Objekt teilweise außerhalb: Wechsel zu "Balanced" Focus-Modus in Settings
+- Strict Mode eignet sich für Objekte komplett im Kreis
+- Balanced Mode erkennt auch Objekte die aus dem Kreis ragen
+
+#### **Daily Quest wird nicht gezählt**
+- Check: Gescanntes Objekt muss in Quest-Targets sein
+- Beispiel: Quest "Scanne Tasse" → Model muss "cup", "bottle" oder "wine glass" erkennen
+- Log-Screen zeigt erkannte Labels → vergleiche mit Quest-Anforderung
+- Quest wechselt täglich → morgen ist ein neuer Quest aktiv
 
 ---
 

@@ -326,6 +326,65 @@ Authorization: Bearer <token>
 
 ---
 
+### **Vision Detection**
+
+#### POST `/api/vision/detect` 🔐
+Objekterkennung mit YOLO v11 oder COCO-SSD.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+x-vision-model: yolo | coco        (optional, default: yolo)
+x-vision-focus: strict | balanced  (optional, default: strict)
+```
+
+**Request Body (multipart/form-data):**
+```
+image: [Binary Image File]
+focusCircle: {
+  "x": 640,
+  "y": 360,
+  "radius": 200
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "label": "cell phone",
+    "confidence": 0.92,
+    "model": "yolo",
+    "focusMode": "strict",
+    "bbox": {
+      "x": 580,
+      "y": 300,
+      "width": 120,
+      "height": 120
+    }
+  }
+}
+```
+
+**Detection Models:**
+- **yolo**: YOLO v11 via Python Subprocess (höhere Genauigkeit)
+- **coco**: COCO-SSD via TensorFlow.js (schneller, kein Python nötig)
+
+**Focus Modes:**
+- **strict**: 1.35x Context-Scale (minimal Hintergrund)
+- **balanced**: 1.85x Context-Scale (mehr Kontext für teilweise sichtbare Objekte)
+
+**Circle-Intersection Filtering:**
+Nur Objekte die den focusCircle schneiden werden zurückgegeben.
+
+**Error Handling:**
+- Falls YOLO fehlschlägt (Python nicht verfügbar): Automatischer Fallback zu COCO-SSD
+- Falls kein Objekt erkannt: `{"success": false, "message": "Kein Objekt erkannt"}`
+
+---
+
 ### **Stats**
 
 #### PUT `/api/stats` 🔐
@@ -409,5 +468,5 @@ curl -X GET http://localhost:5000/api/quests \
 
 ---
 
-**Version:** 1.0.0  
-**Letzte Aktualisierung:** 25.02.2026
+**Version:** 2.0.0  
+**Letzte Aktualisierung:** 03.03.2026

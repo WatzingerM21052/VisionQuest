@@ -37,3 +37,7 @@
 
 **Notiert am:** März 3, 2026  
 **Status:** Geplant für Phase 5
+
+
+Anderes:
+Username wird irgendwie nur in der Session gespeichert, in der er angelegt wird, aber sonst nicht mehr. Nach anmelden beim erstellen wird er angezeigt ansonsten "Spieler"

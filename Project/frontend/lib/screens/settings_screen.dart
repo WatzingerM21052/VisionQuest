@@ -19,7 +19,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final selectedTheme = ref.watch(appStateProvider.select((state) => state.theme));
+    final selectedTheme = ref.watch(
+      appStateProvider.select((state) => state.theme),
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Einstellungen')),
@@ -27,7 +29,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
-            final contentWidth = width > 1100 ? 900.0 : (width > 800 ? 760.0 : 620.0);
+            final contentWidth = width > 1100
+                ? 900.0
+                : (width > 800 ? 760.0 : 620.0);
 
             return Center(
               child: ConstrainedBox(
@@ -52,35 +56,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            child: SegmentedButton<AppThemeOption>(
-                              segments: const [
-                                ButtonSegment(
-                                  value: AppThemeOption.light,
-                                  label: Text('Hell'),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SegmentedButton<AppThemeOption>(
+                                style: ButtonStyle(
+                                  visualDensity: VisualDensity.compact,
+                                  padding:
+                                      const WidgetStatePropertyAll<EdgeInsets>(
+                                        EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                  textStyle: WidgetStatePropertyAll<TextStyle?>(
+                                    theme.textTheme.labelMedium?.copyWith(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                                ButtonSegment(
-                                  value: AppThemeOption.dark,
-                                  label: Text('Dunkel'),
-                                ),
-                                ButtonSegment(
-                                  value: AppThemeOption.system,
-                                  label: Text('System'),
-                                ),
-                                ButtonSegment(
-                                  value: AppThemeOption.retroArcade,
-                                  label: Text('Retro'),
-                                ),
-                                ButtonSegment(
-                                  value: AppThemeOption.adventureMap,
-                                  label: Text('Adventure'),
-                                ),
-                              ],
-                              selected: {selectedTheme},
-                              onSelectionChanged: (value) {
-                                ref
-                                    .read(appStateProvider.notifier)
-                                    .setTheme(value.first);
-                              },
+                                segments: const [
+                                  ButtonSegment(
+                                    value: AppThemeOption.light,
+                                    label: Text('Hell'),
+                                  ),
+                                  ButtonSegment(
+                                    value: AppThemeOption.dark,
+                                    label: Text('Dunkel'),
+                                  ),
+                                  ButtonSegment(
+                                    value: AppThemeOption.system,
+                                    label: Text('System'),
+                                  ),
+                                  ButtonSegment(
+                                    value: AppThemeOption.retroArcade,
+                                    label: Text('Retro'),
+                                  ),
+                                  ButtonSegment(
+                                    value: AppThemeOption.adventureMap,
+                                    label: Text('Map'),
+                                  ),
+                                ],
+                                selected: {selectedTheme},
+                                onSelectionChanged: (value) {
+                                  ref
+                                      .read(appStateProvider.notifier)
+                                      .setTheme(value.first);
+                                },
+                              ),
                             ),
                           ),
                         ],

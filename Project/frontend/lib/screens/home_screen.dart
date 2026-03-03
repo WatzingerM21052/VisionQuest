@@ -319,7 +319,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Heute\'s Quest',
+                                          'Tägliche Quest',
                                           style: theme.textTheme.titleMedium
                                               ?.copyWith(
                                                 color: colorScheme.primary,

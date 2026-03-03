@@ -150,85 +150,95 @@ class _ScannerScreenState extends State<ScannerScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
-            final contentWidth = width > 1200 ? 1000.0 : (width > 900 ? 820.0 : 680.0);
+            final contentWidth = width > 1200
+                ? 1000.0
+                : (width > 900 ? 820.0 : 680.0);
 
-            return Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: contentWidth),
-                child: Column(
-                  children: [
-                    // Camera Preview
-                    Expanded(
-                      child: Center(
-                        child: _buildPreview(theme),
-                      ),
-                    ),
-
-                    // Bottom Controls
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainer,
-                        border: Border(
-                          top: BorderSide(
-                            color: colorScheme.outlineVariant,
-                          ),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(24),
+            return Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: contentWidth),
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                  // Error Message
-                  if (_errorMessage != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: colorScheme.error),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: colorScheme.error,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.error,
-                              ),
-                            ),
-                          ),
+                          // Camera Preview
+                          Expanded(child: Center(child: _buildPreview(theme))),
                         ],
                       ),
                     ),
+                  ),
+                ),
 
-                  // Main CTA Button
-                  FilledButton.icon(
-                    onPressed: _isProcessing ? null : _captureAndDetect,
-                    icon: _isProcessing
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : const Icon(Icons.camera_alt),
-                    label: Text(
-                      _isProcessing ? 'Erkennung läuft...' : 'Foto aufnehmen',
-                    ),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                // Bottom Controls (full width)
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainer,
+                    border: Border(
+                      top: BorderSide(color: colorScheme.outlineVariant),
                     ),
                   ),
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: contentWidth),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Error Message
+                          if (_errorMessage != null)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: colorScheme.errorContainer,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: colorScheme.error),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: colorScheme.error,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(color: colorScheme.error),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Main CTA Button
+                          FilledButton.icon(
+                            onPressed: _isProcessing ? null : _captureAndDetect,
+                            icon: _isProcessing
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(Icons.camera_alt),
+                            label: Text(
+                              _isProcessing
+                                  ? 'Erkennung läuft...'
+                                  : 'Foto aufnehmen',
+                            ),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
 
                           const SizedBox(height: 12),
 
@@ -243,9 +253,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             );
           },
         ),
@@ -265,9 +275,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
             height: 60,
             child: CircularProgressIndicator(
               strokeWidth: 4,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                colorScheme.primary,
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           ),
           const SizedBox(height: 16),
@@ -287,11 +295,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 48, color: colorScheme.error),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
@@ -308,9 +312,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     if (_controller == null || !_controller!.value.isInitialized) {
       return Text(
         'Kamera nicht bereit.',
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: colorScheme.error,
-        ),
+        style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.error),
       );
     }
 

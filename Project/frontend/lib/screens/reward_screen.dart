@@ -202,22 +202,18 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
                   ],
                 ),
               ),
-              child: Lottie.network(
-                'https://assets.lottiefiles.com/packages/lf20_03ylnp7e.json',
-                fit: BoxFit.contain,
-                repeat: false,
-                reverse: false,
-                onLoaded: (composition) {
-                  // Animation loaded successfully
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.92, end: 1.0),
+                duration: const Duration(milliseconds: 650),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Transform.scale(scale: value, child: child);
                 },
-                errorBuilder: (context, error, stackTrace) {
-                  // Fallback to trophy icon
-                  return Icon(
-                    Icons.workspace_premium,
-                    size: 120,
-                    color: colorScheme.primary,
-                  );
-                },
+                child: Icon(
+                  Icons.workspace_premium,
+                  size: 120,
+                  color: colorScheme.primary,
+                ),
               ),
             ),
           ),

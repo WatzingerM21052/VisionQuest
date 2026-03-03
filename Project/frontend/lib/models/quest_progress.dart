@@ -11,7 +11,20 @@ class QuestProgress {
   final int streak;
   final DateTime? lastCompletedDate;
 
+  int get currentLevelStartXp => (level - 1) * 1000;
+
   int get nextLevelXp => level * 1000;
+
+  int get xpIntoCurrentLevel => totalXp - currentLevelStartXp;
+
+  int get xpRequiredForCurrentLevel => nextLevelXp - currentLevelStartXp;
+
+  double get levelProgress {
+    if (xpRequiredForCurrentLevel <= 0) {
+      return 1;
+    }
+    return (xpIntoCurrentLevel / xpRequiredForCurrentLevel).clamp(0, 1);
+  }
 
   QuestProgress copyWith({
     int? totalXp,

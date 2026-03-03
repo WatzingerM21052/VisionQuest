@@ -13,23 +13,27 @@ final appStateProvider =
 class AppStateNotifier extends StateNotifier<AppState> {
   AppStateNotifier() : super(AppState.initial());
 
+  static const int _xpPerLevel = 1000;
+  static const int _maxLogEntries = 200;
+
   void setTheme(AppThemeOption option) {
     state = state.copyWith(theme: option);
   }
 
   void addQuestResult({required String label, required double confidence}) {
-    final xp = (confidence * 100).round().clamp(10, 100);
+    final normalizedConfidence = confidence.clamp(0.0, 1.0);
+    final xp = _xpFromConfidence(normalizedConfidence);
     final now = DateTime.now();
 
     final previous = state.progress;
-    final updatedXp = previous.totalXp + xp;
-    final updatedLevel = (updatedXp ~/ 1000) + 1;
+    final updatedXp = (previous.totalXp + xp).clamp(0, 1 << 30);
+    final updatedLevel = _levelFromXp(updatedXp);
     final updatedStreak = _calculateStreak(previous.lastCompletedDate, now);
 
     final newEntry = QuestLogEntry(
       label: label,
       xp: xp,
-      confidence: confidence,
+      confidence: normalizedConfidence,
       timestamp: now,
     );
 
@@ -40,8 +44,16 @@ class AppStateNotifier extends StateNotifier<AppState> {
         streak: updatedStreak,
         lastCompletedDate: now,
       ),
-      logEntries: [newEntry, ...state.logEntries],
+      logEntries: [newEntry, ...state.logEntries].take(_maxLogEntries).toList(),
     );
+  }
+
+  int _xpFromConfidence(double confidence) {
+    return (confidence * 100).round().clamp(10, 100);
+  }
+
+  int _levelFromXp(int xp) {
+    return (xp ~/ _xpPerLevel) + 1;
   }
 
   int _calculateStreak(DateTime? previousDate, DateTime currentDate) {
@@ -49,16 +61,8 @@ class AppStateNotifier extends StateNotifier<AppState> {
       return 1;
     }
 
-    final previousDay = DateTime(
-      previousDate.year,
-      previousDate.month,
-      previousDate.day,
-    );
-    final currentDay = DateTime(
-      currentDate.year,
-      currentDate.month,
-      currentDate.day,
-    );
+    final previousDay = DateTime(previousDate.year, previousDate.month, previousDate.day);
+    final currentDay = DateTime(currentDate.year, currentDate.month, currentDate.day);
 
     final dayDiff = currentDay.difference(previousDay).inDays;
 

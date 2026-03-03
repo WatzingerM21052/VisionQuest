@@ -24,6 +24,7 @@ class QuestLogScreen extends ConsumerWidget {
                 ? 1100.0
                 : (width > 900 ? 900.0 : 680.0);
             final columns = width >= 1000 ? 4 : (width >= 700 ? 3 : 2);
+            final cardHeight = width >= 1000 ? 250.0 : 242.0;
 
             return Center(
               child: ConstrainedBox(
@@ -84,7 +85,7 @@ class QuestLogScreen extends ConsumerWidget {
                                   crossAxisCount: columns,
                                   crossAxisSpacing: 12,
                                   mainAxisSpacing: 12,
-                                  childAspectRatio: width >= 1000 ? 1.2 : 1.05,
+                                  mainAxisExtent: cardHeight,
                                 ),
                             itemBuilder: (context, index) {
                               final entry = entries[index];
@@ -189,7 +190,6 @@ class QuestLogScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       const Spacer(),
-                                      const SizedBox(height: 4),
                                       Text(
                                         'Confidence ${(entry.confidence * 100).toStringAsFixed(1)}%',
                                         style: theme.textTheme.labelSmall

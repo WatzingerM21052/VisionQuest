@@ -48,9 +48,6 @@ class VisionService {
   }) async {
     final bytes = await image.readAsBytes();
     final fileName = image.name.isNotEmpty ? image.name : 'image.jpg';
-    print(
-      '[VISION_CLIENT] Sending image: $fileName, size: ${bytes.length} bytes',
-    );
 
     final request = http.MultipartRequest(
       'POST',
@@ -66,9 +63,6 @@ class VisionService {
         await _client.send(request),
       );
 
-      print('[VISION_CLIENT] Response status: ${response.statusCode}');
-      print('[VISION_CLIENT] Response body: ${response.body}');
-
       final payload = _tryDecode(response.body);
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = payload['data'] as Map<String, dynamic>? ?? {};
@@ -79,8 +73,7 @@ class VisionService {
         payload['message']?.toString() ?? 'Erkennung fehlgeschlagen',
         code: payload['code']?.toString(),
       );
-    } catch (e) {
-      print('[VISION_CLIENT] Error: $e');
+    } catch (_) {
       rethrow;
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../services/vision_service.dart';
+import 'reward_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -19,7 +20,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
   bool _isInitializing = true;
   bool _isProcessing = false;
   String? _errorMessage;
-  VisionResult? _result;
 
   @override
   void initState() {
@@ -76,7 +76,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
     setState(() {
       _isProcessing = true;
       _errorMessage = null;
-      _result = null;
     });
 
     try {
@@ -95,9 +94,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
         return;
       }
 
-      setState(() {
-        _result = result;
-      });
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => RewardScreen(result: result),
+        ),
+      );
     } on VisionException catch (error) {
       setState(() {
         _errorMessage = error.message;
@@ -129,13 +130,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  if (_result != null)
-                    Text(
-                      'Erkannt: ${_result!.label}\n'
-                      'Sicherheit: ${(_result!.confidence * 100).toStringAsFixed(1)}%',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium,
-                    ),
                   if (_errorMessage != null)
                     Text(
                       _errorMessage!,

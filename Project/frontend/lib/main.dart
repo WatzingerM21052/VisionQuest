@@ -13,11 +13,21 @@ import 'screens/settings_screen.dart';
 import 'services/vision_service.dart';
 import 'theme/app_themes.dart';
 
+/// Entry Point der VisionQuest-Applikation.
+///
+/// Initialisiert Riverpod Provider und startet die App als [VisionQuestApp].
 void main() {
   runApp(const ProviderScope(child: VisionQuestApp()));
 }
 
+/// Root-Widget der VisionQuest-Applikation.
+///
+/// Diese [ConsumerWidget] kümmert sich um:
+/// - Theme-Management via Riverpod [appStateProvider]
+/// - Navigation zwischen den 7 Screens mit animierten Übergängen
+/// - MaterialApp-Konfiguration mit dynamischem Theming
 class VisionQuestApp extends ConsumerWidget {
+  /// Erstellt die Root-App.
   const VisionQuestApp({super.key});
 
   @override
@@ -36,6 +46,16 @@ class VisionQuestApp extends ConsumerWidget {
     );
   }
 
+  /// Erstellt animierte Routes für alle Navigation.
+  ///
+  /// Diese Methode:
+  /// 1. Nutzt Switch-Statement um die entsprechende Page zu erzeugen
+  /// 2. Rendert sie mit [PageRouteBuilder] für Custom-Animationen
+  /// 3. Adds SlideTransition-Animation (von rechts mit easeInOut)
+  /// 4. Handhabt speziale Argument-Übergabe für Reward-Screen
+  ///
+  /// Parameter: [settings] enthält Route-Name und Argumente
+  /// Rückgabe: Animierte [Route] für Navigation
   Route<dynamic> _buildAnimatedRoute(RouteSettings settings) {
     Widget page;
 

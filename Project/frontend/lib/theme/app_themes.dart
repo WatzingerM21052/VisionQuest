@@ -2,7 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../models/app_theme_option.dart';
 
+/// Zentrale Theme-Verwaltung für alle 5 App-Designs.
+///
+/// Diese Klasse bietet statische Methoden zur Theme-Erstellung und
+/// ThemeMode-Bestimmung basierend auf [AppThemeOption].
+///
+/// Verfügbare Designs:
+/// - Light/Dark: Purple Material You (#5D4E8C)
+/// - System: Folgt OS-Einstellung
+/// - RetroArcade: Neon-Cyan (#00C2FF)
+/// - AdventureMap: Warm Brown (#8B5E3C)
 class AppThemes {
+  /// Bestimmt den [ThemeMode] für eine [AppThemeOption].
+  ///
+  /// - System-Option gibt [ThemeMode.system] zurück
+  /// - Dark-Option gibt [ThemeMode.dark] zurück
+  /// - Alle anderen geben [ThemeMode.light] zurück
   static ThemeMode themeModeFor(AppThemeOption option) {
     switch (option) {
       case AppThemeOption.system:
@@ -16,6 +31,10 @@ class AppThemes {
     }
   }
 
+  /// Gibt das Light-Mode ThemeData für die gegebene [AppThemeOption] zurück.
+  ///
+  /// Nutzt Material You ColorScheme mit unterschiedlichen Seed-Farben
+  /// je nach Theme-Option.
   static ThemeData themeFor(AppThemeOption option) {
     switch (option) {
       case AppThemeOption.light:
@@ -50,6 +69,10 @@ class AppThemes {
     }
   }
 
+  /// Gibt das Dark-Mode ThemeData für die gegebene [AppThemeOption] zurück.
+  ///
+  /// Falls die Option kein spezielles Dark-Design hat (light, system),
+  /// wird das Standard Dark Purple Design zurückgegeben.
   static ThemeData darkThemeFor(AppThemeOption option) {
     switch (option) {
       case AppThemeOption.retroArcade:

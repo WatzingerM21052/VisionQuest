@@ -12,31 +12,19 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen>
-    with SingleTickerProviderStateMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
   String? _errorMessage;
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
-
-    // Subtlere Animation: 1.0 zu 1.08 statt 1.15
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOutCubic),
-    );
+    // Animationen minimiert - nur wo sinnvoll nötig
   }
 
   @override
   void dispose() {
-    _pulseController.dispose();
     super.dispose();
   }
 
@@ -119,48 +107,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header Section with Logo - Full Width
-                      Container(
+                      // Logo - Full Width
+                      Image.asset(
+                        'assets/Startlogo.png',
                         width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              colorScheme.primary.withValues(alpha: 0.1),
-                              colorScheme.secondary.withValues(alpha: 0.08),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(alpha: 0.2),
-                            width: 2,
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 24,
-                          horizontal: 16,
-                        ),
-                        child: Column(
-                          children: [
-                            Image.asset(
-                              'assets/Startlogo.png',
-                              height: 160,
-                              fit: BoxFit.contain,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'VisionQuest',
-                              style: theme.textTheme.headlineLarge?.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                          ],
-                        ),
+                        fit: BoxFit.contain,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
 
                       // Welcome Section
                       Text(
@@ -179,52 +132,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Animated Streak Counter - Enhanced Design
-                      ScaleTransition(
-                        scale: _pulseAnimation,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
+                      // Streak Counter - Static, no animation
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.secondary.withValues(alpha: 0.2),
+                            width: 1,
                           ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                colorScheme.secondary.withValues(alpha: 0.15),
-                                colorScheme.tertiary.withValues(alpha: 0.12),
-                              ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('🔥', style: theme.textTheme.headlineMedium),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Streak: ${progress.streak} Tag${progress.streak == 1 ? '' : 'e'}',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: colorScheme.onSecondaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: colorScheme.secondary.withValues(
-                                alpha: 0.3,
-                              ),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colorScheme.secondary.withValues(
-                                  alpha: 0.15,
-                                ),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('🔥', style: theme.textTheme.headlineMedium),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Streak: ${progress.streak} Tag${progress.streak == 1 ? '' : 'e'}',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: colorScheme.secondary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 24),

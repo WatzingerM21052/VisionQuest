@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:google_fonts/google_fonts.dart';
 import '../models/app_theme_option.dart';
 
 /// Zentrale Theme-Verwaltung für alle 5 App-Designs.
@@ -171,22 +172,61 @@ class AppThemes {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       scaffoldBackgroundColor: colorScheme.surface,
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
-        displayMedium: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
-        displaySmall: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-        headlineLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-        headlineMedium: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        headlineSmall: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        titleLarge: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-        titleMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        titleSmall: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        bodyLarge: TextStyle(fontSize: 16),
-        bodyMedium: TextStyle(fontSize: 14),
-        bodySmall: TextStyle(fontSize: 12),
-        labelLarge: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-        labelMedium: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
-        labelSmall: TextStyle(fontWeight: FontWeight.w500, fontSize: 10),
+      textTheme: TextTheme(
+        displayLarge: GoogleFonts.poppins(
+          fontWeight: FontWeight.bold,
+          fontSize: 32,
+        ),
+        displayMedium: GoogleFonts.poppins(
+          fontWeight: FontWeight.bold,
+          fontSize: 28,
+        ),
+        displaySmall: GoogleFonts.poppins(
+          fontWeight: FontWeight.bold,
+          fontSize: 24,
+        ),
+        headlineLarge: GoogleFonts.poppins(
+          fontWeight: FontWeight.bold,
+          fontSize: 24,
+        ),
+        headlineMedium: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
+        ),
+        headlineSmall: GoogleFonts.poppins(
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
+        ),
+        titleLarge: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
+        ),
+        titleMedium: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+        titleSmall: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+        bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400),
+        bodyMedium: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+        bodySmall: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400),
+        labelLarge: GoogleFonts.inter(
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        labelMedium: GoogleFonts.inter(
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+        ),
+        labelSmall: GoogleFonts.inter(
+          fontWeight: FontWeight.w500,
+          fontSize: 10,
+        ),
       ),
     );
   }

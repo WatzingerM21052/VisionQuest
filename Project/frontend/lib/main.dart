@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'app_routes.dart';
+import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/quest_log_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/reward_screen.dart';
+import 'screens/scanner_screen.dart';
+import 'screens/settings_screen.dart';
+import 'services/vision_service.dart';
 
 void main() {
   runApp(const VisionQuestApp());
@@ -16,7 +24,29 @@ class VisionQuestApp extends StatelessWidget {
       theme: _buildLightTheme(),
       darkTheme: _buildDarkTheme(),
       themeMode: ThemeMode.system,
-      home: const LoginScreen(),
+      initialRoute: AppRoutes.login,
+      routes: {
+        AppRoutes.login: (context) => const LoginScreen(),
+        AppRoutes.register: (context) => const RegisterScreen(),
+        AppRoutes.home: (context) => const HomeScreen(),
+        AppRoutes.scanner: (context) => const ScannerScreen(),
+        AppRoutes.questLog: (context) => const QuestLogScreen(),
+        AppRoutes.settings: (context) => const SettingsScreen(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == AppRoutes.reward) {
+          final args = settings.arguments;
+          if (args is VisionResult) {
+            return MaterialPageRoute(
+              builder: (context) => RewardScreen(result: args),
+            );
+          }
+        }
+
+        return MaterialPageRoute(
+          builder: (context) => const LoginScreen(),
+        );
+      },
     );
   }
 }

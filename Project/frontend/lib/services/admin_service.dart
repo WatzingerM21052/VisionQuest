@@ -151,4 +151,27 @@ class AdminService {
       throw AdminException(e.toString(), code: 'DELETE_USER_ERROR');
     }
   }
-}
+
+  // Get admin statistics
+  Future<Map<String, dynamic>> getStats(String token) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/admin/stats'),
+        headers: _authHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        if (json['success'] == true && json['data'] != null) {
+          return json['data'] as Map<String, dynamic>;
+        }
+      }
+
+      throw AdminException(
+        'Fehler beim Abrufen der Statistiken',
+        code: 'GET_STATS_FAILED',
+      );
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'GET_STATS_ERROR');
+    }
+  }

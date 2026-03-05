@@ -9,10 +9,10 @@ class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
 
   @override
-  ConsumerState<AdminScreen> createState() => _AdminScreenState();
+  ConsumerState<_AdminScreenState> createState() => __AdminScreenState();
 }
 
-class _AdminScreenState extends ConsumerState<AdminScreen> {
+class __AdminScreenState extends ConsumerState<_AdminScreenState> {
   final _adminService = AdminService();
   final _authService = AuthService();
   final _searchController = TextEditingController();
@@ -21,6 +21,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   List<User> _filteredUsers = [];
   bool _isLoading = true;
   String? _error;
+  String _currentTab = 'users'; // 'users' oder 'stats'
 
   @override
   void initState() {
@@ -92,38 +93,37 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
       await _adminService.updateUser(token, user.id, updates);
 
-      final currentUsername = ref.read(
-        appStateProvider.select((state) => state.username),
-      );
-      final isEditingCurrentUser =
-          currentUsername != null &&
-          currentUsername.isNotEmpty &&
-          currentUsername == user.username;
+      // Update local app state with changes if relevant fields were modified
+      if (updates.containsKey('xp') ||
+          updates.containsKey('level') ||
+          updates.containsKey('username') ||
+          updates.containsKey('role')) {
+        try {
+          final xpValue = updates['xp'];
+          final levelValue = updates['level'];
+          
+          if (xpValue != null && levelValue != null) {
+            final parsedXp = xpValue is int ? xpValue : int.tryParse(xpValue.toString());
+            final parsedLevel = levelValue is int ? levelValue : int.tryParse(levelValue.toString());
 
-      if (isEditingCurrentUser) {
-        final xpValue = updates['xp'];
-        final levelValue = updates['level'];
-        final parsedXp = xpValue is int
-            ? xpValue
-            : int.tryParse(xpValue?.toString() ?? '');
-        final parsedLevel = levelValue is int
-            ? levelValue
-            : int.tryParse(levelValue?.toString() ?? '');
+            if (parsedXp != null && parsedLevel != null) {
+              ref
+                  .read(appStateProvider.notifier)
+                  .setProgress(totalXp: parsedXp, level: parsedLevel);
+            }
+          }
 
-        if (parsedXp != null && parsedLevel != null) {
-          ref
-              .read(appStateProvider.notifier)
-              .setProgress(totalXp: parsedXp, level: parsedLevel);
-        }
+          final updatedUsername = updates['username']?.toString().trim();
+          if (updatedUsername != null && updatedUsername.isNotEmpty) {
+            ref.read(appStateProvider.notifier).setUsername(updatedUsername);
+          }
 
-        final updatedUsername = updates['username']?.toString().trim();
-        if (updatedUsername != null && updatedUsername.isNotEmpty) {
-          ref.read(appStateProvider.notifier).setUsername(updatedUsername);
-        }
-
-        final updatedRole = updates['role']?.toString().trim();
-        if (updatedRole != null && updatedRole.isNotEmpty) {
-          ref.read(appStateProvider.notifier).setUserRole(updatedRole);
+          final updatedRole = updates['role']?.toString().trim();
+          if (updatedRole != null && updatedRole.isNotEmpty) {
+            ref.read(appStateProvider.notifier).setUserRole(updatedRole);
+          }
+        } catch (e) {
+          debugPrint('Error updating local state: $e');
         }
       }
 
@@ -197,89 +197,497 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       appBar: AppBar(title: const Text('Admin-Panel'), centerTitle: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+          : Column(
+              children: [
+                // Tab Navigation
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 'users',
+                        icon: Icon(Icons.people),
+                        label: Text('Benutzer'),
+                      ),
+                      ButtonSegment(
+                        value: 'stats',
+                        icon: Icon(Icons.bar_chart),
+                        label: Text('Statistiken'),
+                      ),
+                    ],
+                    selected: {_currentTab},
+                    onSelectionChanged: (Set<String> selection) {
+                      setState(() => _currentTab = selection.first);
+                    },
+                  ),
+                ),
+                // Tab Content
+                Expanded(
+                  child: _currentTab == 'users'
+                      ? _buildUserManagementView(context, theme, colorScheme)
+                      : _buildStatisticsView(context, theme, colorScheme),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildUserManagementView(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Search Field
+          SearchBar(
+            controller: _searchController,
+            leading: const Icon(Icons.search),
+            hintText: 'Benutzer suchen...',
+            onChanged: (_) => _filterUsers(),
+            shape: MaterialStateProperty.all(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // User Count
+          Text(
+            '${_filteredUsers.length} Benutzer gefunden',
+            style: theme.textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 12),
+
+          // Error Message
+          if (_error != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: colorScheme.error),
+              ),
+              child: Row(
                 children: [
-                  // Search Field
-                  SearchBar(
-                    controller: _searchController,
-                    leading: const Icon(Icons.search),
-                    hintText: 'Benutzer suchen...',
-                    shape: MaterialStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  Icon(Icons.error_outline, color: colorScheme.error),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _error!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.error,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          if (_error != null) const SizedBox(height: 16),
 
-                  // User Count
-                  Text(
-                    '${_filteredUsers.length} Benutzer gefunden',
-                    style: theme.textTheme.bodyLarge,
+          // User List
+          if (_filteredUsers.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Text(
+                  'Keine Benutzer gefunden',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(height: 12),
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _filteredUsers.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                final user = _filteredUsers[index];
+                return _UserTile(
+                  user: user,
+                  onEdit: () => _editUser(user),
+                  onDelete: () => _deleteUser(user),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
 
-                  // Error Message
-                  if (_error != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: colorScheme.error),
+  Widget _buildStatisticsView(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _loadStatistics(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: colorScheme.error, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Fehler beim Laden der Statistiken',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.error,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  snapshot.error.toString(),
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(child: Text('Keine Daten verfügbar'));
+        }
+
+        final stats = snapshot.data!;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Summary Cards
+              _buildSummaryCards(stats['summary'] ?? {}, theme, colorScheme),
+              const SizedBox(height: 24),
+
+              // Level Distribution
+              _buildLevelDistribution(stats['distribution']?['byLevel'] ?? {}, theme, colorScheme),
+              const SizedBox(height: 24),
+
+              // Top Users
+              _buildTopUsers(stats['topUsers'] ?? [], theme, colorScheme),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> _loadStatistics() async {
+    final token = await _authService.storage.readToken();
+    if (token == null) throw Exception('Kein Token vorhanden');
+    return await _adminService.getStats(token);
+  }
+
+  Widget _buildSummaryCards(
+    Map<String, dynamic> summary,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Übersicht',
+          style: theme.textTheme.titleLarge,
+        ),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.2,
+          children: [
+            _buildStatCard(
+              'Gesamt Benutzer',
+              summary['totalUsers']?.toString() ?? '0',
+              Icons.people,
+              Colors.blue,
+              theme,
+              colorScheme,
+            ),
+            _buildStatCard(
+              'Aktiv',
+              summary['activeUsers']?.toString() ?? '0',
+              Icons.thumb_up,
+              Colors.green,
+              theme,
+              colorScheme,
+            ),
+            _buildStatCard(
+              'Inaktiv',
+              summary['inactiveUsers']?.toString() ?? '0',
+              Icons.thumb_down,
+              Colors.orange,
+              theme,
+              colorScheme,
+            ),
+            _buildStatCard(
+              'Admins',
+              summary['adminCount']?.toString() ?? '0',
+              Icons.shield_admin,
+              Colors.red,
+              theme,
+              colorScheme,
+            ),
+            _buildStatCard(
+              'Ø Level',
+              (summary['averageLevel']?.toString() ?? '0'),
+              Icons.trending_up,
+              Colors.purple,
+              theme,
+              colorScheme,
+            ),
+            _buildStatCard(
+              'Gesamt XP',
+              summary['totalXp']?.toString() ?? '0',
+              Icons.star,
+              Colors.amber,
+              theme,
+              colorScheme,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: color, size: 24),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLevelDistribution(
+    Map<String, dynamic> distribution,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Level Verteilung',
+          style: theme.textTheme.titleLarge,
+        ),
+        const SizedBox(height: 12),
+        if (distribution.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Text(
+                'Keine Daten verfügbar',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: distribution.length,
+              separatorBuilder: (_, __) => const Divider(height: 16),
+              itemBuilder: (context, index) {
+                final entries = distribution.entries.toList();
+                final level = int.tryParse(entries[index].key) ?? entries[index].key;
+                final count = entries[index].value ?? 0;
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Level $level',
+                        style: theme.textTheme.labelMedium,
                       ),
-                      child: Row(
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$count Benutzer',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTopUsers(
+    List<dynamic> topUsers,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Top Benutzer',
+          style: theme.textTheme.titleLarge,
+        ),
+        const SizedBox(height: 12),
+        if (topUsers.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Text(
+                'Keine Benutzer gefunden',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: topUsers.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, index) {
+              final user = topUsers[index] as Map<String, dynamic>;
+              final username = user['username'] ?? 'Unbekannt';
+              final level = user['level'] ?? 0;
+              final xp = user['xp'] ?? 0;
+
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceVariant.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colorScheme.outline),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _getMedalColor(index),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '#${index + 1}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.error_outline, color: colorScheme.error),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _error!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.error,
-                              ),
+                          Text(
+                            username as String,
+                            style: theme.textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Level $level • $xp XP',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  if (_error != null) const SizedBox(height: 16),
-
-                  // User List
-                  if (_filteredUsers.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32),
-                        child: Text(
-                          'Keine Benutzer gefunden',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _filteredUsers.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final user = _filteredUsers[index];
-                        return _UserTile(
-                          user: user,
-                          onEdit: () => _editUser(user),
-                          onDelete: () => _deleteUser(user),
-                        );
-                      },
-                    ),
-                ],
-              ),
-            ),
+                  ],
+                );
+              );
+            },
+          ),
+      ],
     );
+  }
+
+  Color _getMedalColor(int rank) {
+    switch (rank) {
+      case 0:
+        return const Color(0xFFFFD700); // Gold
+      case 1:
+        return const Color(0xFFC0C0C0); // Silver
+      case 2:
+        return const Color(0xFFCD7F32); // Bronze
+      default:
+        return Colors.grey;
+    }
   }
 }
 

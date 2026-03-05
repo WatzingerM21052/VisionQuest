@@ -694,4 +694,73 @@ router.delete('/admin/users/:id', authenticateToken, requireAdmin, async (req, r
     }
 });
 
+/**
+ * GET /api/admin/stats
+ * Admin-Statistiken (nur für Admins)
+ */
+router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const users = await dbService.getAllUsers();
+
+        // Berechne Statistiken
+        const totalUsers = users.length;
+        const totalXp = users.reduce((sum, u) => sum + (u.xp ?? u.XP ?? 0), 0);
+        const averageLevel = users.length > 0
+            ? (users.reduce((sum, u) => sum + (u.level ?? u.LEVEL ?? 1), 0) / users.length).toFixed(1)
+            : 0;
+
+        // Level-Verteilung
+        const levelDistribution = {};
+        users.forEach(u => {
+            const lvl = u.level ?? u.LEVEL ?? 1;
+            levelDistribution[lvl] = (levelDistribution[lvl] || 0) + 1;
+        });
+
+        // Top 5 User nach XP
+        const topUsers = users
+            .sort((a, b) => (b.xp ?? b.XP ?? 0) - (a.xp ?? a.XP ?? 0))
+            .slice(0, 5)
+            .map(u => ({
+                id: u.id ?? u.ID,
+                username: u.username ?? u.USERNAME,
+                level: u.level ?? u.LEVEL ?? 1,
+                xp: u.xp ?? u.XP ?? 0
+            }));
+
+        // Aktiv bedeutet is_active = 1
+        const activeUsers = users.filter(u => (u.is_active ?? u.IS_ACTIVE ?? 1) === 1).length;
+        const inactiveUsers = totalUsers - activeUsers;
+
+        // Admin-Anteil
+        const adminCount = users.filter(u => (u.role ?? u.ROLE ?? 'user') === 'admin').length;
+
+        res.json({
+            success: true,
+            code: 'STATS_RETRIEVED',
+            message: 'Admin-Statistiken erfolgreich abgerufen',
+            data: {
+                summary: {
+                    totalUsers,
+                    activeUsers,
+                    inactiveUsers,
+                    adminCount,
+                    totalXp,
+                    averageLevel: parseFloat(averageLevel)
+                },
+                distribution: {
+                    byLevel: levelDistribution
+                },
+                topUsers
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Abrufen der Statistiken',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

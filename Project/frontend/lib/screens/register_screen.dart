@@ -62,6 +62,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ref.read(appStateProvider.notifier).setUsername(username);
       }
 
+      final role = result.userRole;
+      if (role != null && role.isNotEmpty) {
+        ref.read(appStateProvider.notifier).setUserRole(role);
+      }
+
+      final userData = result.data?['user'];
+      if (userData is Map) {
+        int? parseInt(dynamic value) {
+          if (value == null) return null;
+          if (value is int) return value;
+          return int.tryParse(value.toString());
+        }
+
+        final totalXp = parseInt(userData['xp'] ?? userData['XP']) ?? 0;
+        final level = parseInt(userData['level'] ?? userData['LEVEL']) ?? 1;
+        final streak =
+            parseInt(userData['streak_days'] ?? userData['STREAK_DAYS']) ?? 0;
+
+        ref
+            .read(appStateProvider.notifier)
+            .setProgress(totalXp: totalXp, level: level, streak: streak);
+      }
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result.message)));

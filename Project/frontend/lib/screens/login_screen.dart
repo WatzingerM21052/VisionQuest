@@ -66,6 +66,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ref.read(appStateProvider.notifier).setUserRole(role);
       }
 
+      final userData = result.data?['user'];
+      if (userData is Map) {
+        int? parseInt(dynamic value) {
+          if (value == null) return null;
+          if (value is int) return value;
+          return int.tryParse(value.toString());
+        }
+
+        DateTime? parseDate(dynamic value) {
+          if (value == null) return null;
+          return DateTime.tryParse(value.toString());
+        }
+
+        final totalXp = parseInt(userData['xp'] ?? userData['XP']) ?? 0;
+        final level = parseInt(userData['level'] ?? userData['LEVEL']) ?? 1;
+        final streak =
+            parseInt(userData['streak_days'] ?? userData['STREAK_DAYS']) ?? 0;
+        final lastQuestDate = parseDate(
+          userData['last_quest_date'] ?? userData['LAST_QUEST_DATE'],
+        );
+
+        ref
+            .read(appStateProvider.notifier)
+            .setProgress(
+              totalXp: totalXp,
+              level: level,
+              streak: streak,
+              lastCompletedDate: lastQuestDate,
+            );
+      }
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result.message)));

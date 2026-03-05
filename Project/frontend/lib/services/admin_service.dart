@@ -175,3 +175,196 @@ class AdminService {
       throw AdminException(e.toString(), code: 'GET_STATS_ERROR');
     }
   }
+
+  // Get admin action logs
+  Future<List<Map<String, dynamic>>> getLogs(
+    String token, {
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/admin/logs?limit=$limit&offset=$offset'),
+        headers: _authHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        if (json['success'] == true) {
+          final logs = json['data']['logs'] as List;
+          return logs.map((l) => l as Map<String, dynamic>).toList();
+        }
+      }
+
+      throw AdminException(
+        'Fehler beim Abrufen der Logs',
+        code: 'GET_LOGS_FAILED',
+      );
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'GET_LOGS_ERROR');
+    }
+  }
+
+  // Get action history for a user
+  Future<List<Map<String, dynamic>>> getUserHistory(
+    String token,
+    int userId,
+  ) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/admin/users/$userId/history'),
+        headers: _authHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        if (json['success'] == true) {
+          final actions = json['data']['actions'] as List;
+          return actions.map((a) => a as Map<String, dynamic>).toList();
+        }
+      }
+
+      throw AdminException(
+        'Fehler beim Abrufen der User-History',
+        code: 'GET_HISTORY_FAILED',
+      );
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'GET_HISTORY_ERROR');
+    }
+  }
+
+  // Suspend a user
+  Future<void> suspendUser(String token, int userId, {String? reason}) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/admin/users/$userId/suspend'),
+        headers: _authHeaders(token),
+        body: jsonEncode({'reason': reason}),
+      );
+
+      if (response.statusCode != 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        throw AdminException(
+          json['message'] as String? ?? 'Fehler beim Suspendieren',
+          code: 'SUSPEND_USER_FAILED',
+        );
+      }
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'SUSPEND_USER_ERROR');
+    }
+  }
+
+  // Unsuspend a user
+  Future<void> unsuspendUser(String token, int userId) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/admin/users/$userId/unsuspend'),
+        headers: _authHeaders(token),
+      );
+
+      if (response.statusCode != 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        throw AdminException(
+          json['message'] as String? ?? 'Fehler beim Entsperren',
+          code: 'UNSUSPEND_USER_FAILED',
+        );
+      }
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'UNSUSPEND_USER_ERROR');
+    }
+  }
+
+  // Get all suspensions
+  Future<List<Map<String, dynamic>>> getSuspensions(String token) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/admin/suspensions'),
+        headers: _authHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        if (json['success'] == true) {
+          final suspensions = json['data']['suspensions'] as List;
+          return suspensions.map((s) => s as Map<String, dynamic>).toList();
+        }
+      }
+
+      throw AdminException(
+        'Fehler beim Abrufen der Suspensionen',
+        code: 'GET_SUSPENSIONS_FAILED',
+      );
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'GET_SUSPENSIONS_ERROR');
+    }
+  }
+
+  // Export users as CSV
+  Future<String> exportUsersCSV(String token) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/admin/users/export?format=csv'),
+        headers: _authHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        return response.body;
+      }
+
+      throw AdminException(
+        'Fehler beim Exportieren',
+        code: 'EXPORT_CSV_FAILED',
+      );
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'EXPORT_CSV_ERROR');
+    }
+  }
+
+  // Export users as JSON
+  Future<Map<String, dynamic>> exportUsersJSON(String token) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/admin/users/export?format=json'),
+        headers: _authHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        if (json['success'] == true) {
+          return json['data'] as Map<String, dynamic>;
+        }
+      }
+
+      throw AdminException(
+        'Fehler beim Exportieren',
+        code: 'EXPORT_JSON_FAILED',
+      );
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'EXPORT_JSON_ERROR');
+    }
+  }
+
+  // Get activity dashboard
+  Future<Map<String, dynamic>> getActivity(String token) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/admin/activity'),
+        headers: _authHeaders(token),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        if (json['success'] == true && json['data'] != null) {
+          return json['data'] as Map<String, dynamic>;
+        }
+      }
+
+      throw AdminException(
+        'Fehler beim Abrufen der Activity-Daten',
+        code: 'GET_ACTIVITY_FAILED',
+      );
+    } catch (e) {
+      throw AdminException(e.toString(), code: 'GET_ACTIVITY_ERROR');
+    }
+  }
+}

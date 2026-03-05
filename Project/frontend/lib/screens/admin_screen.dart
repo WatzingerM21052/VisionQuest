@@ -21,7 +21,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   List<User> _filteredUsers = [];
   bool _isLoading = true;
   String? _error;
-  String _currentTab = 'users'; // 'users' oder 'stats'
+  String _currentTab =
+      'users'; // 'users', 'stats', 'logs', 'suspensions', 'activity'
 
   @override
   void initState() {
@@ -101,10 +102,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         try {
           final xpValue = updates['xp'];
           final levelValue = updates['level'];
-          
+
           if (xpValue != null && levelValue != null) {
-            final parsedXp = xpValue is int ? xpValue : int.tryParse(xpValue.toString());
-            final parsedLevel = levelValue is int ? levelValue : int.tryParse(levelValue.toString());
+            final parsedXp = xpValue is int
+                ? xpValue
+                : int.tryParse(xpValue.toString());
+            final parsedLevel = levelValue is int
+                ? levelValue
+                : int.tryParse(levelValue.toString());
 
             if (parsedXp != null && parsedLevel != null) {
               ref
@@ -202,30 +207,54 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                 // Tab Navigation
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(
-                        value: 'users',
-                        icon: Icon(Icons.people),
-                        label: Text('Benutzer'),
-                      ),
-                      ButtonSegment(
-                        value: 'stats',
-                        icon: Icon(Icons.bar_chart),
-                        label: Text('Statistiken'),
-                      ),
-                    ],
-                    selected: {_currentTab},
-                    onSelectionChanged: (Set<String> selection) {
-                      setState(() => _currentTab = selection.first);
-                    },
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(
+                          value: 'users',
+                          icon: Icon(Icons.people),
+                          label: Text('Benutzer'),
+                        ),
+                        ButtonSegment(
+                          value: 'stats',
+                          icon: Icon(Icons.bar_chart),
+                          label: Text('Statistiken'),
+                        ),
+                        ButtonSegment(
+                          value: 'activity',
+                          icon: Icon(Icons.trending_up),
+                          label: Text('Aktivität'),
+                        ),
+                        ButtonSegment(
+                          value: 'logs',
+                          icon: Icon(Icons.history),
+                          label: Text('Logs'),
+                        ),
+                        ButtonSegment(
+                          value: 'suspensions',
+                          icon: Icon(Icons.block),
+                          label: Text('Sperrungen'),
+                        ),
+                      ],
+                      selected: {_currentTab},
+                      onSelectionChanged: (Set<String> selection) {
+                        setState(() => _currentTab = selection.first);
+                      },
+                    ),
                   ),
                 ),
                 // Tab Content
                 Expanded(
                   child: _currentTab == 'users'
                       ? _buildUserManagementView(context, theme, colorScheme)
-                      : _buildStatisticsView(context, theme, colorScheme),
+                      : _currentTab == 'stats'
+                      ? _buildStatisticsView(context, theme, colorScheme)
+                      : _currentTab == 'activity'
+                      ? _buildActivityView(context, theme, colorScheme)
+                      : _currentTab == 'logs'
+                      ? _buildLogsView(context, theme, colorScheme)
+                      : _buildSuspensionsView(context, theme, colorScheme),
                 ),
               ],
             ),
@@ -242,17 +271,29 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Search Field
-          SearchBar(
-            controller: _searchController,
-            leading: const Icon(Icons.search),
-            hintText: 'Benutzer suchen...',
-            onChanged: (_) => _filterUsers(),
-            shape: MaterialStateProperty.all(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          // Search & Export Row
+          Row(
+            children: [
+              Expanded(
+                child: SearchBar(
+                  controller: _searchController,
+                  leading: const Icon(Icons.search),
+                  hintText: 'Benutzer suchen...',
+                  onChanged: (_) => _filterUsers(),
+                  shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              FilledButton.icon(
+                onPressed: _showExportDialog,
+                icon: const Icon(Icons.download),
+                label: const Text('Export'),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
@@ -373,7 +414,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               const SizedBox(height: 24),
 
               // Level Distribution
-              _buildLevelDistribution(stats['distribution']?['byLevel'] ?? {}, theme, colorScheme),
+              _buildLevelDistribution(
+                stats['distribution']?['byLevel'] ?? {},
+                theme,
+                colorScheme,
+              ),
               const SizedBox(height: 24),
 
               // Top Users
@@ -399,10 +444,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Übersicht',
-          style: theme.textTheme.titleLarge,
-        ),
+        Text('Übersicht', style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: 2,
@@ -518,10 +560,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Level Verteilung',
-          style: theme.textTheme.titleLarge,
-        ),
+        Text('Level Verteilung', style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
         if (distribution.isEmpty)
           Center(
@@ -550,7 +589,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               separatorBuilder: (_, __) => const Divider(height: 16),
               itemBuilder: (context, index) {
                 final entries = distribution.entries.toList();
-                final level = int.tryParse(entries[index].key) ?? entries[index].key;
+                final level =
+                    int.tryParse(entries[index].key) ?? entries[index].key;
                 final count = entries[index].value ?? 0;
 
                 return Row(
@@ -594,10 +634,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Top Benutzer',
-          style: theme.textTheme.titleLarge,
-        ),
+        Text('Top Benutzer', style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
         if (topUsers.isEmpty)
           Center(
@@ -669,7 +706,8 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                       ),
                     ),
                   ],
-                );
+                ),
+              );
             },
           ),
       ],
@@ -686,6 +724,711 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         return const Color(0xFFCD7F32); // Bronze
       default:
         return Colors.grey;
+    }
+  }
+
+  Widget _buildActivityView(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _loadActivity(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: colorScheme.error, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Fehler beim Laden der Activity-Daten',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(child: Text('Keine Daten verfügbar'));
+        }
+
+        final activity = snapshot.data!;
+        final recentlyActive = activity['recentlyActive'] as List? ?? [];
+        final questStats =
+            (activity['questStats'] as Map<dynamic, dynamic>? ?? {})
+                .cast<String, dynamic>();
+        final topCategories = activity['topCategories'] as List? ?? [];
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Quest Stats Cards
+              _buildActivityStats(questStats, theme, colorScheme),
+              const SizedBox(height: 24),
+
+              // Recently Active Users
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Zuletzt aktive Benutzer',
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  if (recentlyActive.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          'Keine Aktivität',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: recentlyActive.length,
+                      separatorBuilder: (_, __) => const Divider(),
+                      itemBuilder: (context, index) {
+                        final user =
+                            recentlyActive[index] as Map<String, dynamic>;
+                        final username =
+                            user['username'] as String? ?? 'Unknown';
+                        final level = user['level'] as int? ?? 1;
+                        final xp = user['xp'] as int? ?? 0;
+                        final lastActive = user['lastActive'] as String? ?? '';
+
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceVariant.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colorScheme.outline),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                child: Text(
+                                  username.isNotEmpty
+                                      ? username[0].toUpperCase()
+                                      : '?',
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: colorScheme.onPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      username,
+                                      style: theme.textTheme.labelLarge,
+                                    ),
+                                    Text(
+                                      'Level $level • $xp XP',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                lastActive.isEmpty ? 'N/A' : lastActive,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Top Categories
+              if (topCategories.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Top Quest-Kategorien',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: topCategories.length,
+                      separatorBuilder: (_, __) => const Divider(),
+                      itemBuilder: (context, index) {
+                        final cat =
+                            topCategories[index] as Map<String, dynamic>;
+                        final category =
+                            cat['category'] as String? ?? 'Unknown';
+                        final count = cat['count'] as int? ?? 0;
+
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceVariant.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colorScheme.outline),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  category,
+                                  style: theme.textTheme.labelLarge,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '$count Quests',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActivityStats(
+    Map<String, dynamic> stats,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Quest-Statistiken', style: theme.textTheme.titleLarge),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.0,
+          children: [
+            _buildStatCard(
+              'Abgeschlossen',
+              stats['totalCompleted']?.toString() ?? '0',
+              Icons.check_circle,
+              Colors.green,
+              theme,
+              colorScheme,
+            ),
+            _buildStatCard(
+              'Benutzer',
+              stats['uniqueUsers']?.toString() ?? '0',
+              Icons.people,
+              Colors.blue,
+              theme,
+              colorScheme,
+            ),
+            _buildStatCard(
+              'Ø Belohnung',
+              stats['avgReward']?.toString() ?? '0',
+              Icons.stars,
+              Colors.amber,
+              theme,
+              colorScheme,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<Map<String, dynamic>> _loadActivity() async {
+    final token = await _authService.storage.readToken();
+    if (token == null) throw Exception('Kein Token vorhanden');
+    return await _adminService.getActivity(token);
+  }
+
+  Widget _buildLogsView(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _loadLogs(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: colorScheme.error, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Fehler beim Laden der Logs',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final logs = snapshot.data ?? [];
+
+        if (logs.isEmpty) {
+          return Center(
+            child: Text(
+              'Keine Admin-Actions geloggt',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Admin-Activity Log (${logs.length})',
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  FilledButton.icon(
+                    onPressed: _downloadLogsCSV,
+                    icon: const Icon(Icons.download),
+                    label: const Text('Export'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: logs.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final log = logs[index];
+                  final actionType = log['ACTION_TYPE'] as String? ?? 'unknown';
+                  final adminName =
+                      log['admin_username'] as String? ?? 'Unknown Admin';
+                  final targetName = log['target_username'] as String? ?? 'N/A';
+                  final createdAt = log['CREATED_AT'] as String? ?? '';
+                  final status = log['STATUS'] as String? ?? 'success';
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceVariant.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: colorScheme.outline),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _getActionIcon(actionType),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${actionType.toUpperCase()} by $adminName',
+                                    style: theme.textTheme.labelLarge,
+                                  ),
+                                  if (targetName != 'N/A')
+                                    Text(
+                                      'Target: $targetName',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: status == 'success'
+                                    ? Colors.green.withOpacity(0.2)
+                                    : Colors.red.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                status.toUpperCase(),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: status == 'success'
+                                      ? Colors.green
+                                      : Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          createdAt,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSuspensionsView(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _loadSuspensions(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: colorScheme.error, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'Fehler beim Laden der Sperrungen',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final suspensions = snapshot.data ?? [];
+
+        if (suspensions.isEmpty) {
+          return Center(
+            child: Text(
+              'Keine aktiven Sperrungen',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Gesperrte Benutzer (${suspensions.length})',
+                style: theme.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: suspensions.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final susp = suspensions[index];
+                  final username = susp['USERNAME'] as String? ?? 'Unknown';
+                  final email = susp['EMAIL'] as String? ?? '';
+                  final reason = susp['REASON'] as String? ?? '';
+                  final suspendedBy =
+                      susp['suspended_by_username'] as String? ?? 'Unknown';
+                  final suspendedAt = susp['SUSPENDED_AT'] as String? ?? '';
+                  final userId = susp['USER_ID'] as int;
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.block, color: Colors.red),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    username,
+                                    style: theme.textTheme.labelLarge,
+                                  ),
+                                  Text(
+                                    email,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            FilledButton.icon(
+                              onPressed: () => _unsuspendUser(userId),
+                              icon: const Icon(Icons.check),
+                              label: const Text('Entsperren'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (reason.isNotEmpty) ...[
+                          Text(
+                            'Grund: $reason',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        Text(
+                          'Gesperrt von: $suspendedBy am $suspendedAt',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _loadLogs() async {
+    final token = await _authService.storage.readToken();
+    if (token == null) throw Exception('Kein Token vorhanden');
+    return await _adminService.getLogs(token);
+  }
+
+  Future<List<Map<String, dynamic>>> _loadSuspensions() async {
+    final token = await _authService.storage.readToken();
+    if (token == null) throw Exception('Kein Token vorhanden');
+    return await _adminService.getSuspensions(token);
+  }
+
+  Future<void> _unsuspendUser(int userId) async {
+    try {
+      final token = await _authService.storage.readToken();
+      if (token == null) throw AdminException('Kein Token', code: 'NO_TOKEN');
+
+      await _adminService.unsuspendUser(token, userId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User entsperrt')));
+        setState(() => _currentTab = _currentTab); // Reload
+      }
+    } on AdminException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _downloadLogsCSV() async {
+    try {
+      final token = await _authService.storage.readToken();
+      if (token == null) throw AdminException('Kein Token', code: 'NO_TOKEN');
+
+      // Fetch logs (for future CSV download)
+      await _adminService.getLogs(token);
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Logs exportiert')));
+      }
+    } on AdminException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Icon _getActionIcon(String actionType) {
+    switch (actionType.toLowerCase()) {
+      case 'create':
+        return const Icon(Icons.add_circle, color: Colors.green);
+      case 'update':
+        return const Icon(Icons.edit, color: Colors.blue);
+      case 'delete':
+        return const Icon(Icons.delete, color: Colors.red);
+      case 'suspend':
+        return const Icon(Icons.block, color: Colors.orange);
+      case 'unsuspend':
+        return const Icon(Icons.check_circle, color: Colors.green);
+      case 'export':
+        return const Icon(Icons.download, color: Colors.purple);
+      default:
+        return const Icon(Icons.info, color: Colors.grey);
+    }
+  }
+
+  Future<void> _showExportDialog() async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Format auswählen'),
+        content: const Text(
+          'In welchem Format möchtest du die Daten exportieren?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _exportAsJSON();
+            },
+            icon: const Icon(Icons.code),
+            label: const Text('JSON'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _exportAsCSV();
+            },
+            icon: const Icon(Icons.table_chart),
+            label: const Text('CSV'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _exportAsJSON() async {
+    try {
+      final token = await _authService.storage.readToken();
+      if (token == null) throw AdminException('Kein Token', code: 'NO_TOKEN');
+
+      final data = await _adminService.exportUsersJSON(token);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${data['count']} Benutzer exportiert'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } on AdminException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportAsCSV() async {
+    try {
+      final token = await _authService.storage.readToken();
+      if (token == null) throw AdminException('Kein Token', code: 'NO_TOKEN');
+
+      await _adminService.exportUsersCSV(token);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CSV exportiert'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } on AdminException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 }

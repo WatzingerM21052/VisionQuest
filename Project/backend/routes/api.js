@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const dbService = require('../services/dbService');
 const sessionService = require('../services/sessionService');
+const adminActionService = require('../services/adminActionService');
 const { sendError: authError, handleCatchError: authCatchError, validateRegisterInput, validateLoginInput } = require('../services/authErrorHandler');
 const { sendError: userError, handleCatchError: userCatchError } = require('../services/userErrorHandler');
 const { sendError: questError, handleCatchError: questCatchError, checkQuestOwnership } = require('../services/questErrorHandler');
@@ -645,6 +646,18 @@ router.put('/admin/users/:id', authenticateToken, requireAdmin, async (req, res)
 
         const result = await dbService.updateUser(userId, cleanUpdates);
 
+        // Log the action
+        try {
+            await adminActionService.logAction(
+                req.user.userId,
+                'update',
+                userId,
+                { fields: Object.keys(cleanUpdates), values: cleanUpdates }
+            );
+        } catch (logErr) {
+            console.warn('Failed to log admin action:', logErr);
+        }
+
         res.json({
             success: true,
             code: 'USER_UPDATED',
@@ -678,6 +691,18 @@ router.delete('/admin/users/:id', authenticateToken, requireAdmin, async (req, r
         }
 
         const result = await dbService.deleteUser(userId);
+
+        // Log the action
+        try {
+            await adminActionService.logAction(
+                req.user.userId,
+                'delete',
+                userId,
+                { deleted_user: userId }
+            );
+        } catch (logErr) {
+            console.warn('Failed to log admin action:', logErr);
+        }
 
         res.json({
             success: true,
@@ -758,6 +783,359 @@ router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => 
             success: false,
             code: 'ADMIN_ERROR',
             message: 'Fehler beim Abrufen der Statistiken',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/admin/logs
+ * Admin-Action Logs abrufen (nur für Admins)
+ */
+router.get('/admin/logs', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+        const offset = parseInt(req.query.offset) || 0;
+
+        const logs = await adminActionService.getAllActions(limit, offset);
+
+        res.json({
+            success: true,
+            code: 'LOGS_RETRIEVED',
+            message: 'Admin-Logs erfolgreich abgerufen',
+            data: {
+                logs,
+                count: logs.length
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Abrufen der Logs',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/admin/users/:id/history
+ * Aktion-History für spezifischen User (nur für Admins)
+ */
+router.get('/admin/users/:id/history', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const actions = await adminActionService.getUserActions(userId, 50);
+
+        res.json({
+            success: true,
+            code: 'HISTORY_RETRIEVED',
+            message: 'User-History erfolgreich abgerufen',
+            data: {
+                userId,
+                actions,
+                count: actions.length
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Abrufen der History',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/admin/users/:id/suspend
+ * User suspendieren (nur für Admins)
+ */
+router.post('/admin/users/:id/suspend', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const { reason } = req.body;
+
+        // Sicherheit: User darf sich selbst nicht suspendieren
+        if (userId === req.user.userId) {
+            return res.status(400).json({
+                success: false,
+                code: 'CANNOT_SUSPEND_SELF',
+                message: 'Du kannst deinen eigenen Account nicht suspendieren'
+            });
+        }
+
+        const result = await adminActionService.suspendUser(userId, req.user.userId, reason || 'Kein Grund angegeben');
+
+        // Log the action
+        try {
+            await adminActionService.logAction(
+                req.user.userId,
+                'suspend',
+                userId,
+                { reason: reason || 'Kein Grund angegeben' }
+            );
+        } catch (logErr) {
+            console.warn('Failed to log admin action:', logErr);
+        }
+
+        res.json({
+            success: true,
+            code: 'USER_SUSPENDED',
+            message: result.message,
+            data: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Suspendieren des Users',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/admin/users/:id/unsuspend
+ * User entsperren (nur für Admins)
+ */
+router.post('/admin/users/:id/unsuspend', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+
+        const result = await adminActionService.unsuspendUser(userId);
+
+        // Log the action
+        try {
+            await adminActionService.logAction(
+                req.user.userId,
+                'unsuspend',
+                userId,
+                { reason: 'User entsperrt' }
+            );
+        } catch (logErr) {
+            console.warn('Failed to log admin action:', logErr);
+        }
+
+        res.json({
+            success: true,
+            code: 'USER_UNSUSPENDED',
+            message: result.message
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Entsperren des Users',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/admin/suspensions
+ * Alle Suspensionen abrufen (nur für Admins)
+ */
+router.get('/admin/suspensions', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const suspensions = await adminActionService.getAllSuspensions(false);
+
+        res.json({
+            success: true,
+            code: 'SUSPENSIONS_RETRIEVED',
+            message: 'Suspensionen erfolgreich abgerufen',
+            data: {
+                suspensions,
+                count: suspensions.length
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Abrufen der Suspensionen',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/admin/users/export
+ * User-Daten in CSV oder JSON exportieren (nur für Admins)
+ * Query-Parameter: format=csv oder format=json
+ */
+router.get('/admin/users/export', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const format = (req.query.format || 'json').toLowerCase();
+        const users = await dbService.getAllUsers();
+
+        if (format === 'csv') {
+            // Convert to CSV
+            const csvHeader = 'ID,USERNAME,EMAIL,LEVEL,XP,ROLE,IS_ACTIVE,CREATED_AT\n';
+            const csvRows = users.map(u => {
+                const id = u.id ?? u.ID;
+                const username = (u.username ?? u.USERNAME ?? '').replace(/,/g, ';');
+                const email = (u.email ?? u.EMAIL ?? '').replace(/,/g, ';');
+                const level = u.level ?? u.LEVEL ?? 1;
+                const xp = u.xp ?? u.XP ?? 0;
+                const role = u.role ?? u.ROLE ?? 'user';
+                const isActive = u.is_active ?? u.IS_ACTIVE ?? 1;
+                const createdAt = u.created_at ?? u.CREATED_AT ?? '';
+                return `${id},"${username}","${email}",${level},${xp},"${role}",${isActive},"${createdAt}"`;
+            }).join('\n');
+
+            const csv = csvHeader + csvRows;
+
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename="user-export.csv"');
+            res.send(csv);
+
+            // Log the export action
+            try {
+                await adminActionService.logAction(
+                    req.user.userId,
+                    'export',
+                    null,
+                    { format: 'csv', userCount: users.length }
+                );
+            } catch (logErr) {
+                console.warn('Failed to log export action:', logErr);
+            }
+        } else {
+            // JSON export (default)
+            const jsonData = users.map(u => ({
+                id: u.id ?? u.ID,
+                username: u.username ?? u.USERNAME,
+                email: u.email ?? u.EMAIL,
+                level: u.level ?? u.LEVEL ?? 1,
+                xp: u.xp ?? u.XP ?? 0,
+                role: u.role ?? u.ROLE ?? 'user',
+                is_active: u.is_active ?? u.IS_ACTIVE ?? 1,
+                createdAt: u.created_at ?? u.CREATED_AT,
+                updatedAt: u.updated_at ?? u.UPDATED_AT
+            }));
+
+            // Log the export action
+            try {
+                await adminActionService.logAction(
+                    req.user.userId,
+                    'export',
+                    null,
+                    { format: 'json', userCount: users.length }
+                );
+            } catch (logErr) {
+                console.warn('Failed to log export action:', logErr);
+            }
+
+            res.setHeader('Content-Disposition', 'attachment; filename="user-export.json"');
+            res.json({
+                success: true,
+                code: 'EXPORT_SUCCESS',
+                message: 'User-Export erfolgreich',
+                data: {
+                    users: jsonData,
+                    count: jsonData.length,
+                    exportedAt: new Date().toISOString()
+                }
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Exportieren der User-Daten',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/admin/activity
+ * User Activity Dashboard (nur für Admins)
+ */
+router.get('/admin/activity', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const db = require('../database/db');
+
+        // Zuletzt aktive User
+        const recentlyActiveUsers = await new Promise((resolve, reject) => {
+            const sql = `
+                SELECT 
+                    ID, USERNAME, LEVEL, XP, LAST_QUEST_DATE
+                FROM USERS
+                WHERE LAST_QUEST_DATE IS NOT NULL
+                ORDER BY LAST_QUEST_DATE DESC
+                LIMIT 10
+            `;
+            db.all(sql, [], (err, rows) => {
+                if (err) return reject(err);
+                resolve((rows || []).map(u => ({
+                    id: u.ID ?? u.id,
+                    username: u.USERNAME ?? u.username,
+                    level: u.LEVEL ?? u.level ?? 1,
+                    xp: u.XP ?? u.xp ?? 0,
+                    lastActive: u.LAST_QUEST_DATE ?? u.last_quest_date
+                })));
+            });
+        });
+
+        // Total Quests Completed
+        const questStats = await new Promise((resolve, reject) => {
+            const sql = `
+                SELECT 
+                    COUNT(*) as total_completed,
+                    COUNT(USER_ID) as unique_users,
+                    AVG(XP_REWARD) as avg_reward
+                FROM QUESTS
+                WHERE STATUS = 'completed'
+            `;
+            db.get(sql, [], (err, row) => {
+                if (err) return reject(err);
+                resolve({
+                    totalCompleted: row?.total_completed ?? 0,
+                    uniqueUsers: row?.unique_users ?? 0,
+                    avgReward: row?.avg_reward?.toFixed(1) ?? 0
+                });
+            });
+        });
+
+        // Top Quest Categories
+        const topCategories = await new Promise((resolve, reject) => {
+            const sql = `
+                SELECT 
+                    CATEGORY,
+                    COUNT(*) as count
+                FROM QUESTS
+                WHERE STATUS = 'completed'
+                GROUP BY CATEGORY
+                ORDER BY count DESC
+                LIMIT 5
+            `;
+            db.all(sql, [], (err, rows) => {
+                if (err) return reject(err);
+                resolve((rows || []).map(r => ({
+                    category: r.CATEGORY ?? r.category,
+                    count: r.count
+                })));
+            });
+        });
+
+        res.json({
+            success: true,
+            code: 'ACTIVITY_RETRIEVED',
+            message: 'Activity-Dashboard erfolgreich abgerufen',
+            data: {
+                recentlyActive: recentlyActiveUsers,
+                questStats: questStats,
+                topCategories: topCategories,
+                lastUpdated: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Abrufen der Activity-Daten',
             error: error.message
         });
     }

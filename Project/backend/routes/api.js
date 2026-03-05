@@ -1055,7 +1055,7 @@ router.get('/admin/users/export', authenticateToken, requireAdmin, async (req, r
  */
 router.get('/admin/activity', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const db = require('../database/db');
+        const { db } = require('../../database/db');
 
         // Zuletzt aktive User
         const recentlyActiveUsers = await new Promise((resolve, reject) => {

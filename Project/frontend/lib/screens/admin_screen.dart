@@ -100,32 +100,42 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           updates.containsKey('username') ||
           updates.containsKey('role')) {
         try {
-          final xpValue = updates['xp'];
-          final levelValue = updates['level'];
+          final currentUsername = ref.read(appStateProvider).username;
+          final isCurrentUser =
+              currentUsername != null && currentUsername == user.username;
 
-          if (xpValue != null && levelValue != null) {
-            final parsedXp = xpValue is int
-                ? xpValue
-                : int.tryParse(xpValue.toString());
-            final parsedLevel = levelValue is int
-                ? levelValue
-                : int.tryParse(levelValue.toString());
+          if (isCurrentUser) {
+            final xpValue = updates['xp'];
+            final levelValue = updates['level'];
 
-            if (parsedXp != null && parsedLevel != null) {
+            final parsedXp = xpValue == null
+                ? null
+                : (xpValue is int ? xpValue : int.tryParse(xpValue.toString()));
+            final parsedLevel = levelValue == null
+                ? null
+                : (levelValue is int
+                      ? levelValue
+                      : int.tryParse(levelValue.toString()));
+
+            if (parsedXp != null || parsedLevel != null) {
+              final currentProgress = ref.read(appStateProvider).progress;
               ref
                   .read(appStateProvider.notifier)
-                  .setProgress(totalXp: parsedXp, level: parsedLevel);
+                  .setProgress(
+                    totalXp: parsedXp ?? currentProgress.totalXp,
+                    level: parsedLevel ?? currentProgress.level,
+                  );
             }
-          }
 
-          final updatedUsername = updates['username']?.toString().trim();
-          if (updatedUsername != null && updatedUsername.isNotEmpty) {
-            ref.read(appStateProvider.notifier).setUsername(updatedUsername);
-          }
+            final updatedUsername = updates['username']?.toString().trim();
+            if (updatedUsername != null && updatedUsername.isNotEmpty) {
+              ref.read(appStateProvider.notifier).setUsername(updatedUsername);
+            }
 
-          final updatedRole = updates['role']?.toString().trim();
-          if (updatedRole != null && updatedRole.isNotEmpty) {
-            ref.read(appStateProvider.notifier).setUserRole(updatedRole);
+            final updatedRole = updates['role']?.toString().trim();
+            if (updatedRole != null && updatedRole.isNotEmpty) {
+              ref.read(appStateProvider.notifier).setUserRole(updatedRole);
+            }
           }
         } catch (e) {
           debugPrint('Error updating local state: $e');
@@ -441,68 +451,94 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     ThemeData theme,
     ColorScheme colorScheme,
   ) {
+    final items = [
+      (
+        'Gesamt Benutzer',
+        summary['totalUsers']?.toString() ?? '0',
+        Icons.people,
+        colorScheme.primary,
+        colorScheme.primaryContainer,
+      ),
+      (
+        'Aktiv',
+        summary['activeUsers']?.toString() ?? '0',
+        Icons.thumb_up,
+        colorScheme.tertiary,
+        colorScheme.tertiaryContainer,
+      ),
+      (
+        'Inaktiv',
+        summary['inactiveUsers']?.toString() ?? '0',
+        Icons.thumb_down,
+        colorScheme.secondary,
+        colorScheme.secondaryContainer,
+      ),
+      (
+        'Admins',
+        summary['adminCount']?.toString() ?? '0',
+        Icons.shield,
+        colorScheme.error,
+        colorScheme.errorContainer,
+      ),
+      (
+        'Ø Level',
+        summary['averageLevel']?.toString() ?? '0',
+        Icons.trending_up,
+        colorScheme.primary,
+        colorScheme.primaryContainer,
+      ),
+      (
+        'Gesamt XP',
+        summary['totalXp']?.toString() ?? '0',
+        Icons.star,
+        colorScheme.secondary,
+        colorScheme.secondaryContainer,
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Übersicht', style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.2,
-          children: [
-            _buildStatCard(
-              'Gesamt Benutzer',
-              summary['totalUsers']?.toString() ?? '0',
-              Icons.people,
-              Colors.blue,
-              theme,
-              colorScheme,
-            ),
-            _buildStatCard(
-              'Aktiv',
-              summary['activeUsers']?.toString() ?? '0',
-              Icons.thumb_up,
-              Colors.green,
-              theme,
-              colorScheme,
-            ),
-            _buildStatCard(
-              'Inaktiv',
-              summary['inactiveUsers']?.toString() ?? '0',
-              Icons.thumb_down,
-              Colors.orange,
-              theme,
-              colorScheme,
-            ),
-            _buildStatCard(
-              'Admins',
-              summary['adminCount']?.toString() ?? '0',
-              Icons.shield,
-              Colors.red,
-              theme,
-              colorScheme,
-            ),
-            _buildStatCard(
-              'Ø Level',
-              (summary['averageLevel']?.toString() ?? '0'),
-              Icons.trending_up,
-              Colors.purple,
-              theme,
-              colorScheme,
-            ),
-            _buildStatCard(
-              'Gesamt XP',
-              summary['totalXp']?.toString() ?? '0',
-              Icons.star,
-              Colors.amber,
-              theme,
-              colorScheme,
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final crossAxisCount = width >= 1100
+                ? 4
+                : width >= 760
+                ? 3
+                : 2;
+            const spacing = 12.0;
+            const targetHeight = 120.0;
+            final itemWidth =
+                (width - ((crossAxisCount - 1) * spacing)) / crossAxisCount;
+            final childAspectRatio = itemWidth / targetHeight;
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: spacing,
+                mainAxisSpacing: spacing,
+                childAspectRatio: childAspectRatio,
+              ),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _buildStatCard(
+                  item.$1,
+                  item.$2,
+                  item.$3,
+                  item.$4,
+                  item.$5,
+                  theme,
+                  colorScheme,
+                );
+              },
+            );
+          },
         ),
       ],
     );
@@ -512,40 +548,56 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     String label,
     String value,
     IconData icon,
-    Color color,
+    Color foregroundColor,
+    Color backgroundColor,
     ThemeData theme,
     ColorScheme colorScheme,
   ) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 24),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: foregroundColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: foregroundColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: foregroundColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -957,6 +1009,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               stats['totalCompleted']?.toString() ?? '0',
               Icons.check_circle,
               Colors.green,
+              Colors.green.withOpacity(0.12),
               theme,
               colorScheme,
             ),
@@ -965,6 +1018,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               stats['uniqueUsers']?.toString() ?? '0',
               Icons.people,
               Colors.blue,
+              Colors.blue.withOpacity(0.12),
               theme,
               colorScheme,
             ),
@@ -973,6 +1027,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               stats['avgReward']?.toString() ?? '0',
               Icons.stars,
               Colors.amber,
+              Colors.amber.withOpacity(0.12),
               theme,
               colorScheme,
             ),

@@ -3,7 +3,7 @@
  * Service für Admin-Action Logging und Moderation
  */
 
-const db = require('../database/db');
+const { db } = require('../../database/db');
 
 class AdminActionService {
     /**

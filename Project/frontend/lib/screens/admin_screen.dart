@@ -609,71 +609,92 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     ThemeData theme,
     ColorScheme colorScheme,
   ) {
+    final entries = distribution.entries.toList();
+    final maxCount = entries.fold<int>(
+      1,
+      (max, e) => (e.value is num && e.value > max) ? e.value as int : max,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Level Verteilung', style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
-        if (distribution.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Text(
-                'Keine Daten verfügbar',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceVariant.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.outline),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: distribution.length,
-              separatorBuilder: (_, __) => const Divider(height: 16),
-              itemBuilder: (context, index) {
-                final entries = distribution.entries.toList();
-                final level =
-                    int.tryParse(entries[index].key) ?? entries[index].key;
-                final count = entries[index].value ?? 0;
-
-                return Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Level $level',
-                        style: theme.textTheme.labelMedium,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '$count Benutzer',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colorScheme.outlineVariant),
           ),
+          child: entries.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Text(
+                      'Keine Daten verfügbar',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: entries.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final raw = entries[index];
+                    final level = int.tryParse(raw.key) ?? raw.key;
+                    final count = (raw.value as num?)?.toInt() ?? 0;
+                    final progress = count / maxCount;
+
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: colorScheme.outlineVariant),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Level $level',
+                                  style: theme.textTheme.labelLarge,
+                                ),
+                              ),
+                              Text(
+                                '$count Benutzer',
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: LinearProgressIndicator(
+                              value: progress.clamp(0.0, 1.0),
+                              minHeight: 8,
+                              backgroundColor:
+                                  colorScheme.surfaceContainerHighest,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
       ],
     );
   }
@@ -688,80 +709,87 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       children: [
         Text('Top Benutzer', style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
-        if (topUsers.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Text(
-                'Keine Benutzer gefunden',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          )
-        else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: topUsers.length,
-            separatorBuilder: (_, __) => const Divider(),
-            itemBuilder: (context, index) {
-              final user = topUsers[index] as Map<String, dynamic>;
-              final username = user['username'] ?? 'Unbekannt';
-              final level = user['level'] ?? 0;
-              final xp = user['xp'] ?? 0;
-
-              return Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceVariant.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: colorScheme.outline),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: _getMedalColor(index),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '#${index + 1}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colorScheme.outlineVariant),
+          ),
+          child: topUsers.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Text(
+                      'Keine Benutzer gefunden',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: topUsers.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final user = topUsers[index] as Map<String, dynamic>;
+                    final username = user['username'] ?? 'Unbekannt';
+                    final level = user['level'] ?? 0;
+                    final xp = user['xp'] ?? 0;
+
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: colorScheme.outlineVariant),
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            username as String,
-                            style: theme.textTheme.labelLarge,
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: _getMedalColor(index),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '#${index + 1}',
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Level $level • $xp XP',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  username as String,
+                                  style: theme.textTheme.titleSmall,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Level $level • $xp XP',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+        ),
       ],
     );
   }
@@ -825,160 +853,180 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Quest Stats Cards
               _buildActivityStats(questStats, theme, colorScheme),
-              const SizedBox(height: 24),
-
-              // Recently Active Users
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Zuletzt aktive Benutzer',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  if (recentlyActive.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Text(
-                          'Keine Aktivität',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+              const SizedBox(height: 20),
+              Text(
+                'Zuletzt aktive Benutzer',
+                style: theme.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: recentlyActive.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Text(
+                            'Keine Aktivität',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: recentlyActive.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final user =
+                              recentlyActive[index] as Map<String, dynamic>;
+                          final username =
+                              user['username'] as String? ?? 'Unknown';
+                          final level = user['level'] as int? ?? 1;
+                          final xp = user['xp'] as int? ?? 0;
+                          final lastActive =
+                              user['lastActive'] as String? ?? '';
+
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: colorScheme.primaryContainer,
+                                  child: Text(
+                                    username.isNotEmpty
+                                        ? username[0].toUpperCase()
+                                        : '?',
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        username,
+                                        style: theme.textTheme.titleSmall,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Level $level • $xp XP',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  lastActive.isEmpty ? 'N/A' : lastActive,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                    )
-                  else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: recentlyActive.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final user =
-                            recentlyActive[index] as Map<String, dynamic>;
-                        final username =
-                            user['username'] as String? ?? 'Unknown';
-                        final level = user['level'] as int? ?? 1;
-                        final xp = user['xp'] as int? ?? 0;
-                        final lastActive = user['lastActive'] as String? ?? '';
-
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceVariant.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: colorScheme.outline),
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 20,
-                                child: Text(
-                                  username.isNotEmpty
-                                      ? username[0].toUpperCase()
-                                      : '?',
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    color: colorScheme.onPrimary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      username,
-                                      style: theme.textTheme.labelLarge,
-                                    ),
-                                    Text(
-                                      'Level $level • $xp XP',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                lastActive.isEmpty ? 'N/A' : lastActive,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                ],
               ),
-              const SizedBox(height: 24),
-
-              // Top Categories
-              if (topCategories.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Top Quest-Kategorien',
-                      style: theme.textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 12),
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: topCategories.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final cat =
-                            topCategories[index] as Map<String, dynamic>;
-                        final category =
-                            cat['category'] as String? ?? 'Unknown';
-                        final count = cat['count'] as int? ?? 0;
-
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceVariant.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: colorScheme.outline),
+              const SizedBox(height: 20),
+              Text('Top Quest-Kategorien', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: topCategories.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Text(
+                            'Keine Kategorie-Daten',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  category,
-                                  style: theme.textTheme.labelLarge,
-                                ),
+                        ),
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: topCategories.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final cat =
+                              topCategories[index] as Map<String, dynamic>;
+                          final category =
+                              cat['category'] as String? ?? 'Unknown';
+                          final count = cat['count'] as int? ?? 0;
+
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant,
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  '$count Quests',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: colorScheme.onPrimaryContainer,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    category,
+                                    style: theme.textTheme.titleSmall,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    '$count Quests',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
             ],
           ),
         );
@@ -991,47 +1039,69 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     ThemeData theme,
     ColorScheme colorScheme,
   ) {
+    final items = [
+      (
+        'Abgeschlossen',
+        stats['totalCompleted']?.toString() ?? '0',
+        Icons.check_circle,
+        colorScheme.tertiary,
+        colorScheme.tertiaryContainer,
+      ),
+      (
+        'Benutzer',
+        stats['uniqueUsers']?.toString() ?? '0',
+        Icons.people,
+        colorScheme.primary,
+        colorScheme.primaryContainer,
+      ),
+      (
+        'Ø Belohnung',
+        stats['avgReward']?.toString() ?? '0',
+        Icons.stars,
+        colorScheme.secondary,
+        colorScheme.secondaryContainer,
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Quest-Statistiken', style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.0,
-          children: [
-            _buildStatCard(
-              'Abgeschlossen',
-              stats['totalCompleted']?.toString() ?? '0',
-              Icons.check_circle,
-              Colors.green,
-              Colors.green.withOpacity(0.12),
-              theme,
-              colorScheme,
-            ),
-            _buildStatCard(
-              'Benutzer',
-              stats['uniqueUsers']?.toString() ?? '0',
-              Icons.people,
-              Colors.blue,
-              Colors.blue.withOpacity(0.12),
-              theme,
-              colorScheme,
-            ),
-            _buildStatCard(
-              'Ø Belohnung',
-              stats['avgReward']?.toString() ?? '0',
-              Icons.stars,
-              Colors.amber,
-              Colors.amber.withOpacity(0.12),
-              theme,
-              colorScheme,
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final crossAxisCount = width >= 980
+                ? 3
+                : width >= 640
+                ? 2
+                : 1;
+            const spacing = 12.0;
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: spacing,
+                mainAxisSpacing: spacing,
+                childAspectRatio: 2.1,
+              ),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _buildStatCard(
+                  item.$1,
+                  item.$2,
+                  item.$3,
+                  item.$4,
+                  item.$5,
+                  theme,
+                  colorScheme,
+                );
+              },
+            );
+          },
         ),
       ],
     );
@@ -1075,17 +1145,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
         final logs = snapshot.data ?? [];
 
-        if (logs.isEmpty) {
-          return Center(
-            child: Text(
-              'Keine Admin-Actions geloggt',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          );
-        }
-
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -1094,99 +1153,136 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Admin-Activity Log (${logs.length})',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  FilledButton.icon(
+                  Text('Admin-Activity Log', style: theme.textTheme.titleLarge),
+                  FilledButton.tonalIcon(
                     onPressed: _downloadLogsCSV,
                     icon: const Icon(Icons.download),
                     label: const Text('Export'),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: logs.length,
-                separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (context, index) {
-                  final log = logs[index];
-                  final actionType = log['ACTION_TYPE'] as String? ?? 'unknown';
-                  final adminName =
-                      log['admin_username'] as String? ?? 'Unknown Admin';
-                  final targetName = log['target_username'] as String? ?? 'N/A';
-                  final createdAt = log['CREATED_AT'] as String? ?? '';
-                  final status = log['STATUS'] as String? ?? 'success';
-
-                  return Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceVariant.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: colorScheme.outline),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            _getActionIcon(actionType),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${actionType.toUpperCase()} by $adminName',
-                                    style: theme.textTheme.labelLarge,
-                                  ),
-                                  if (targetName != 'N/A')
-                                    Text(
-                                      'Target: $targetName',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                ],
-                              ),
+              const SizedBox(height: 12),
+              Text(
+                '${logs.length} Einträge',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: logs.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Text(
+                            'Keine Admin-Actions geloggt',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: status == 'success'
-                                    ? Colors.green.withOpacity(0.2)
-                                    : Colors.red.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                status.toUpperCase(),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: status == 'success'
-                                      ? Colors.green
-                                      : Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          createdAt,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: logs.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final log = logs[index];
+                          final actionType =
+                              (log['ACTION_TYPE'] as String? ?? 'unknown')
+                                  .toLowerCase();
+                          final adminName =
+                              log['admin_username'] as String? ??
+                              'Unknown Admin';
+                          final targetName =
+                              log['target_username'] as String? ?? 'N/A';
+                          final createdAt = log['CREATED_AT'] as String? ?? '';
+                          final status = (log['STATUS'] as String? ?? 'success')
+                              .toLowerCase();
+                          final success = status == 'success';
+
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    _getActionIcon(actionType),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${actionType.toUpperCase()} • $adminName',
+                                            style: theme.textTheme.titleSmall,
+                                          ),
+                                          if (targetName != 'N/A')
+                                            Text(
+                                              'Target: $targetName',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: success
+                                            ? colorScheme.tertiaryContainer
+                                            : colorScheme.errorContainer,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        status.toUpperCase(),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: success
+                                                  ? colorScheme
+                                                        .onTertiaryContainer
+                                                  : colorScheme
+                                                        .onErrorContainer,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  createdAt,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -1227,101 +1323,144 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
         final suspensions = snapshot.data ?? [];
 
-        if (suspensions.isEmpty) {
-          return Center(
-            child: Text(
-              'Keine aktiven Sperrungen',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          );
-        }
-
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('Gesperrte Benutzer', style: theme.textTheme.titleLarge),
+              const SizedBox(height: 12),
               Text(
-                'Gesperrte Benutzer (${suspensions.length})',
-                style: theme.textTheme.titleLarge,
+                '${suspensions.length} aktive Sperrungen',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
-              const SizedBox(height: 16),
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: suspensions.length,
-                separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (context, index) {
-                  final susp = suspensions[index];
-                  final username = susp['USERNAME'] as String? ?? 'Unknown';
-                  final email = susp['EMAIL'] as String? ?? '';
-                  final reason = susp['REASON'] as String? ?? '';
-                  final suspendedBy =
-                      susp['suspended_by_username'] as String? ?? 'Unknown';
-                  final suspendedAt = susp['SUSPENDED_AT'] as String? ?? '';
-                  final userId = susp['USER_ID'] as int;
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: colorScheme.errorContainer.withOpacity(0.45),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: suspensions.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Text(
+                            'Keine aktiven Sperrungen',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      )
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: suspensions.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final susp = suspensions[index];
+                          final username =
+                              (susp['USERNAME'] ??
+                                      susp['username'] ??
+                                      'Unknown')
+                                  .toString();
+                          final email = (susp['EMAIL'] ?? susp['email'] ?? '')
+                              .toString();
+                          final reason =
+                              (susp['REASON'] ?? susp['reason'] ?? '')
+                                  .toString();
+                          final suspendedBy =
+                              (susp['suspended_by_username'] ??
+                                      susp['SUSPENDED_BY_USERNAME'] ??
+                                      'Unknown')
+                                  .toString();
+                          final suspendedAt =
+                              (susp['SUSPENDED_AT'] ??
+                                      susp['suspended_at'] ??
+                                      '')
+                                  .toString();
+                          final userId =
+                              (susp['USER_ID'] ?? susp['user_id'] ?? 0) as int;
 
-                  return Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.block, color: Colors.red),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    username,
-                                    style: theme.textTheme.labelLarge,
-                                  ),
-                                  Text(
-                                    email,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.errorContainer,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.block,
+                                        color: colorScheme.onErrorContainer,
+                                        size: 20,
+                                      ),
                                     ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            username,
+                                            style: theme.textTheme.titleSmall,
+                                          ),
+                                          if (email.isNotEmpty)
+                                            Text(
+                                              email,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    FilledButton.tonalIcon(
+                                      onPressed: () => _unsuspendUser(userId),
+                                      icon: const Icon(Icons.check),
+                                      label: const Text('Entsperren'),
+                                    ),
+                                  ],
+                                ),
+                                if (reason.isNotEmpty) ...[
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Grund: $reason',
+                                    style: theme.textTheme.bodyMedium,
                                   ),
                                 ],
-                              ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Gesperrt von: $suspendedBy am $suspendedAt',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
-                            FilledButton.icon(
-                              onPressed: () => _unsuspendUser(userId),
-                              icon: const Icon(Icons.check),
-                              label: const Text('Entsperren'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        if (reason.isNotEmpty) ...[
-                          Text(
-                            'Grund: $reason',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-                        Text(
-                          'Gesperrt von: $suspendedBy am $suspendedAt',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                          );
+                        },
+                      ),
               ),
             ],
           ),

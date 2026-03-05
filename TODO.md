@@ -138,7 +138,49 @@
 
 ---
 
-## Nächste Schritte (Zukünftig - Phase 7+)
+## Phase 7 - Bug Fixes & Data Persistence ❌ IN PROGRESS
+
+### 🐛 Login & State Management Bugs - Morgen zu fixen
+
+#### 1. Remove Login Success Toast ❌
+- [ ] Frontend: Login erfolgreich Toast entfernen
+  - Grund: Redundantes UI-Feedback - sieht man auf Home sowieso
+
+#### 2. Streak Persistence Bug ❌
+- [ ] **Problem**: Streak wird immer auf 0 gesetzt, da nicht richtig gespeichert
+  - [ ] Backend: `/api/auth/login` Response - wird `streak_days` korrekt zurückgegeben?
+  - [ ] Frontend: `login_screen.dart` - wird `last_quest_date` mit Streak korrekt synced?
+  - [ ] Database: Check ob `last_quest_date` in users Tabelle aktualisiert wird
+  - [ ] Test: Logout → 1h später Login → Streak sollte korrekt sein
+
+#### 3. Progress Bar Loading Bug ❌
+- [ ] **Problem**: Progressbar balken wird nicht geladen bei Login wenn Progress da
+  - [ ] Frontend: `home_screen.dart` - wird `appState.progress` richtig gelesen nach Login?
+  - [ ] Prüfe ob LinearProgressIndicator mit den neuen Werten aktualisiert wird
+  - [ ] Test: Nach Login sollte Progress Bar sofort sichtbar sein
+
+#### 4. Daily Quest Completion Status Bug ❌
+- [ ] **Problem**: Wenn Daily Quest heute bereits erledigt und neu eingeloggt, wird sie wieder als unerledigt angezeigt
+  - [ ] Backend: `GET /api/quests` - Quest completion status korrekt?
+  - [ ] `questService.js` - getDailyQuests() filtering Logic
+  - [ ] Frontend: Nach Login - werden completed Quests richtig gefiltert?
+  - [ ] Database: Quest_log Einträge für heute vorhanden & korrekt?
+
+#### 5. Quest Log Persistence ❌
+- [ ] **Zu klären**: Wird der Quest-Historie (completed quest log) korrekt gespeichert & geladen?
+  - [ ] Backend: Tabelle `quest_log` - Struktur & Inhalt überprüfen
+  - [ ] Welche Endpoint speichert Completion? `POST /api/quests/:id/complete`
+  - [ ] Frontend: Wo wird Quest-Historie angezeigt? (falls vorhanden)
+  - [ ] Test: Complete Quest → Logout → Login → Quest sollte in History sein
+
+---
+
+**Starttag:** März 6, 2026  
+**Priorität:** 🔴 HIGH - Beeinflussen Benutzererlebnis & Datenkonsistenz
+
+---
+
+## Nächste Schritte (Zukünftig - Phase 8+)
 - [ ] Mobile App Optimierungen
 - [ ] Performance Monitoring Dashboard
 - [ ] Erweiterte Datenanalyse (ML-basierte Insights)

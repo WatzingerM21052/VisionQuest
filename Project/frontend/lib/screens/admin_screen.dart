@@ -9,10 +9,10 @@ class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
 
   @override
-  ConsumerState<_AdminScreenState> createState() => __AdminScreenState();
+  ConsumerState<AdminScreen> createState() => _AdminScreenState();
 }
 
-class __AdminScreenState extends ConsumerState<_AdminScreenState> {
+class _AdminScreenState extends ConsumerState<AdminScreen> {
   final _adminService = AdminService();
   final _authService = AuthService();
   final _searchController = TextEditingController();
@@ -439,7 +439,7 @@ class __AdminScreenState extends ConsumerState<_AdminScreenState> {
             _buildStatCard(
               'Admins',
               summary['adminCount']?.toString() ?? '0',
-              Icons.shield_admin,
+              Icons.shield,
               Colors.red,
               theme,
               colorScheme,
@@ -670,7 +670,6 @@ class __AdminScreenState extends ConsumerState<_AdminScreenState> {
                     ),
                   ],
                 );
-              );
             },
           ),
       ],

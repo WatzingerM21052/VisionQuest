@@ -30,7 +30,7 @@
 - [x] Settings-Screen: Admin-Panel Link (nur für Admins sichtbar)
 - [x] Separate Admin-Screen mit:
   - [x] User-Management Tab
-  - [ ] Statistiken-Übersicht (optional - Phase 6)
+  - [x] Statistiken-Übersicht (Übersicht, Level-Verteilung, Top 5 Users)
   - [ ] Moderation-Tools (optional - Phase 6)
 
 ---
@@ -74,15 +74,29 @@
 - ✅ **app_routes.dart**: `/admin` Route hinzugefügt
 - ✅ **main.dart**: Admin-Screen Route registriert
 
+### 📊 Admin Statistics Dashboard ✅
+- [x] Backend-Endpoint `GET /api/admin/stats` mit:
+  - [x] Summary Stats (totalUsers, activeUsers, inactiveUsers, adminCount, totalXp, averageLevel)
+  - [x] Level Distribution (Benutzer gruppiert nach Level)
+  - [x] Top 5 Users Ranking (mit Medal-Styling: Gold/Silver/Bronze)
+- [x] Frontend AdminService.getStats() Methode
+- [x] Statistics Tab im Admin-Screen
+  - [x] Responsive Grid-Layout für Stat-Karten
+  - [x] Farbcodierte Metriken
+  - [x] Loading & Error States
+  - [x] Ranking mit visuellen Indikatoren
+
 ---
 
 **Status:** ✅ Phase 5 vollständig erledigt  
-**Datum:** März 5, 2026
+**Datum:** März 5, 2026  
+**Letzte Updates:** Statistics Dashboard, Bug-Fixes (Class Naming, Icons, Parenthesis)
 
 ---
 
 ## Nächste Schritte (Zukünftig - Phase 6)
-- [ ] Admin-Statistiken Dashboard (User-Aktivität, Top-Leistungen)
+- [ ] Erweiterte Statistiken (Charts/Graphs für Visualisierung)
 - [ ] Moderation-Tools (User-Berichte, Suspensionen)
-- [ ] Transaktionslogger für Admin-Aktionen
-- [ ] Export-Funktionen (CSV, JSON)
+- [ ] Admin-Action Logging (welche Actions wann durchgeführt)
+- [ ] Export-Funktionen (CSV/JSON Export der User-Daten)
+- [ ] User Activity Dashboard (Quest-Completion, Login-Times, etc.)

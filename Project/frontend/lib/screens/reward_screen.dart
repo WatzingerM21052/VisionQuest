@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
 
 import '../providers/app_state_provider.dart';
 import '../services/vision_service.dart';
@@ -299,20 +298,8 @@ class _RewardScreenState extends ConsumerState<RewardScreen>
     bool repeat = true,
     bool reverse = false,
   }) {
-    return Lottie.network(
-      primaryUrl,
-      fit: BoxFit.contain,
-      repeat: repeat,
-      reverse: reverse,
-      errorBuilder: (context, error, stackTrace) {
-        return Lottie.network(
-          secondaryUrl,
-          fit: BoxFit.contain,
-          repeat: repeat,
-          reverse: reverse,
-          errorBuilder: (context, error, stackTrace) => fallback,
-        );
-      },
-    );
+    // Direkt zum Fallback gehen, da externe URLs CORS-Probleme haben
+    // Die Fallbacks sind bereits hochwertige native Flutter-Animationen
+    return fallback;
   }
 }

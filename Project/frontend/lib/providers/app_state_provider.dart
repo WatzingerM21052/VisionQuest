@@ -55,6 +55,30 @@ class AppStateNotifier extends StateNotifier<AppState> {
     state = state.copyWith(username: username);
   }
 
+  /// Setzt die Benutzerrolle (user oder admin).
+  ///
+  /// Parameter: [role] - Benutzerrolle nach erfolgreichem Login/Register
+  void setUserRole(String? role) {
+    state = state.copyWith(userRole: role);
+  }
+
+  /// Aktualisiert den Fortschritt (XP/Level/Streak), z.B. nach Server-Sync.
+  void setProgress({
+    required int totalXp,
+    required int level,
+    int? streak,
+    DateTime? lastCompletedDate,
+  }) {
+    state = state.copyWith(
+      progress: state.progress.copyWith(
+        totalXp: totalXp,
+        level: level,
+        streak: streak ?? state.progress.streak,
+        lastCompletedDate: lastCompletedDate,
+      ),
+    );
+  }
+
   /// Verarbeitet einen neuen Quest-Erfolg (Objekterkennung).
   ///
   /// Diese Methode:

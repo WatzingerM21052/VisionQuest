@@ -24,4 +24,7 @@ class AppRoutes {
 
   /// Settings-Screen für Theme-Einstellungen und Benutzerkonfiguration.
   static const settings = '/settings';
+
+  /// Admin-Screen für Benutzerverwaltung (nur für Admins).
+  static const admin = '/admin';
 }

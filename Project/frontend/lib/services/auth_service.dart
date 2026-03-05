@@ -40,6 +40,17 @@ class AuthResponse {
     }
     return data?['username']?.toString();
   }
+
+  String? get userRole {
+    final userData = data?['user'];
+    if (userData is Map<String, dynamic>) {
+      return userData['role']?.toString();
+    }
+    if (userData is Map) {
+      return userData['role']?.toString();
+    }
+    return data?['role']?.toString();
+  }
 }
 
 abstract class TokenStorage {
@@ -137,6 +148,9 @@ class AuthService {
   final http.Client _client;
   final TokenStorage _storage;
 
+  // Public getter für Token Storage (für Admin-Screen etc.)
+  TokenStorage get storage => _storage;
+
   Future<AuthResponse> register({
     required String username,
     required String email,
@@ -156,13 +170,31 @@ class AuthService {
   }
 
   Future<AuthResponse> login({
-    required String email,
     required String password,
+    String? email,
+    String? username,
   }) async {
+    // Mindestens email oder username erforderlich
+    if ((email == null || email.isEmpty) &&
+        (username == null || username.isEmpty)) {
+      throw AuthException(
+        'Email oder Username erforderlich',
+        code: 'MISSING_CREDENTIALS',
+      );
+    }
+
+    final body = {'password': password};
+    if (email != null && email.isNotEmpty) {
+      body['email'] = email;
+    }
+    if (username != null && username.isNotEmpty) {
+      body['username'] = username;
+    }
+
     final response = await _client.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: _jsonHeaders(),
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode(body),
     );
 
     return await _handleAuthResponse(response, persistToken: true);

@@ -11,6 +11,7 @@ import 'quest_progress.dart';
 /// - Den Quest-Fortschritt des Spielers (Level, XP, Streak)
 /// - Die Historie aller gefundenen Objekte
 /// - Den eingeloggten Benutzernamen
+/// - Die Benutzerrolle (user | admin)
 class AppState {
   /// Erstellt einen neuen App-State.
   ///
@@ -19,6 +20,7 @@ class AppState {
   ///   - [progress]: Quest-Progression ([QuestProgress])
   ///   - [logEntries]: Liste aller Quest-Erfolge (max 200 Einträge)
   ///   - [username]: Eingeloggter Benutzername (optional)
+  ///   - [userRole]: Benutzerrolle (user | admin, optional)
   const AppState({
     required this.theme,
     required this.detectionModel,
@@ -26,6 +28,7 @@ class AppState {
     required this.progress,
     required this.logEntries,
     this.username,
+    this.userRole,
   });
 
   /// Erstellt einen Standard-State für neue Sessions.
@@ -50,6 +53,7 @@ class AppState {
   final QuestProgress progress;
   final List<QuestLogEntry> logEntries;
   final String? username;
+  final String? userRole;
 
   AppState copyWith({
     AppThemeOption? theme,
@@ -58,6 +62,7 @@ class AppState {
     QuestProgress? progress,
     List<QuestLogEntry>? logEntries,
     String? username,
+    String? userRole,
   }) {
     return AppState(
       theme: theme ?? this.theme,
@@ -66,6 +71,7 @@ class AppState {
       progress: progress ?? this.progress,
       logEntries: logEntries ?? this.logEntries,
       username: username ?? this.username,
+      userRole: userRole ?? this.userRole,
     );
   }
 }

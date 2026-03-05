@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app_routes.dart';
 import '../models/app_theme_option.dart';
 import '../models/detection_focus_option.dart';
 import '../models/detection_model_option.dart';
@@ -30,6 +31,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final selectedFocus = ref.watch(
       appStateProvider.select((state) => state.detectionFocus),
     );
+    final userRole = ref.watch(
+      appStateProvider.select((state) => state.userRole),
+    );
+    final isAdmin = userRole == 'admin';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Einstellungen')),
@@ -224,19 +229,81 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    // Admin Section
+                    if (isAdmin) ...[
+                      Text(
+                        'Admin',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.admin_panel_settings),
+                          title: const Text('Admin-Control Panel'),
+                          subtitle: const Text(
+                            'Benutzerverwaltung & Statistiken',
+                          ),
+                          trailing: const Icon(Icons.arrow_forward),
+                          onTap: () {
+                            Navigator.of(context).pushNamed(AppRoutes.admin);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    Text(
+                      'Informationen',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Card(
                       child: Column(
-                        children: const [
-                          ListTile(
+                        children: [
+                          const ListTile(
                             leading: Icon(Icons.info_outline),
                             title: Text('Version'),
                             subtitle: Text('VisionQuest 1.0.0'),
                           ),
-                          Divider(height: 1),
-                          ListTile(
+                          const Divider(height: 1),
+                          const ListTile(
                             leading: Icon(Icons.security_outlined),
                             title: Text('Datenschutz'),
                             subtitle: Text('Lokale Daten & Kontooptionen'),
+                          ),
+                          const Divider(height: 1),
+                          ListTile(
+                            leading: Icon(
+                              Icons.shield_outlined,
+                              color: userRole == 'admin'
+                                  ? colorScheme.error
+                                  : colorScheme.primary,
+                            ),
+                            title: const Text('Benutzer-Rolle'),
+                            subtitle: Text(userRole ?? 'user'),
+                            trailing: userRole == 'admin'
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.errorContainer,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      'ADMIN',
+                                      style: TextStyle(
+                                        color: colorScheme.onErrorContainer,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  )
+                                : null,
                           ),
                         ],
                       ),

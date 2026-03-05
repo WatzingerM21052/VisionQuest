@@ -102,24 +102,55 @@ router.post('/auth/register', async (req, res) => {
 
 /**
  * POST /api/auth/login
- * User-Login
+ * User-Login mit Email ODER Username
  */
 router.post('/auth/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, username, password } = req.body;
 
-        // Input Validierung
-        const validationErrors = validateLoginInput(email, password);
-        if (validationErrors.length > 0) {
-            return authError(res, 'MISSING_FIELDS', { errors: validationErrors });
+        const normalizeUser = (rawUser) => {
+            if (!rawUser) return null;
+            return {
+                id: rawUser.id ?? rawUser.ID,
+                username: rawUser.username ?? rawUser.USERNAME,
+                email: rawUser.email ?? rawUser.EMAIL,
+                password_hash: rawUser.password_hash ?? rawUser.PASSWORD_HASH,
+                level: rawUser.level ?? rawUser.LEVEL ?? 1,
+                xp: rawUser.xp ?? rawUser.XP ?? 0,
+                streak_days: rawUser.streak_days ?? rawUser.STREAK_DAYS ?? 0,
+                last_quest_date: rawUser.last_quest_date ?? rawUser.LAST_QUEST_DATE ?? null,
+                theme: rawUser.theme ?? rawUser.THEME ?? 'default',
+                role: rawUser.role ?? rawUser.ROLE ?? 'user',
+                is_active: rawUser.is_active ?? rawUser.IS_ACTIVE ?? 1,
+                created_at: rawUser.created_at ?? rawUser.CREATED_AT,
+                updated_at: rawUser.updated_at ?? rawUser.UPDATED_AT
+            };
+        };
+
+        // Input Validierung - entweder email oder username erforderlich
+        if (!password) {
+            return authError(res, 'MISSING_FIELDS', { errors: ['password ist erforderlich'] });
         }
 
-        const user = await dbService.getUserByEmail(email);
+        if (!email && !username) {
+            return authError(res, 'MISSING_FIELDS', { errors: ['email oder username ist erforderlich'] });
+        }
+
+        // User per Email oder Username finden
+        let user;
+        if (email) {
+            user = await dbService.getUserByEmail(email);
+        } else {
+            user = await dbService.getUserByUsername(username);
+        }
+
+        user = normalizeUser(user);
 
         if (!user) {
             return authError(res, 'INVALID_CREDENTIALS');
         }
 
+        // Passwort verifizieren
         const isPasswordValid = await dbService.verifyPassword(password, user.password_hash);
 
         if (!isPasswordValid) {
@@ -128,7 +159,7 @@ router.post('/auth/login', async (req, res) => {
 
         // JWT Token erstellen
         const token = jwt.sign(
-            { userId: user.id, username: user.username },
+            { userId: user.id, username: user.username, role: user.role },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -517,6 +548,149 @@ router.put('/stats', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         statsCatchError(res, error, 'UPDATE_STATS');
+    }
+});
+
+// ============ ADMIN MIDDLEWARE ============
+
+/**
+ * Middleware: Admin-Check - nur Admins dürfen diese Routes versenden
+ */
+const requireAdmin = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            code: 'UNAUTHORIZED',
+            message: 'Authentifizierung erforderlich'
+        });
+    }
+
+    // JWT Token dekodieren um rolle zu prüfen
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) {
+        return res.status(403).json({
+            success: false,
+            code: 'FORBIDDEN',
+            message: 'Admin-Zugriff erforderlich'
+        });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err || !decoded || decoded.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                code: 'FORBIDDEN',
+                message: 'Admin-Zugriff erforderlich'
+            });
+        }
+        next();
+    });
+};
+
+// ============ ADMIN ROUTES ============
+
+/**
+ * GET /api/admin/users
+ * Alle User auflisten (nur für Admins)
+ */
+router.get('/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const users = await dbService.getAllUsers();
+
+        res.json({
+            success: true,
+            code: 'USERS_RETRIEVED',
+            message: 'User-Liste erfolgreich abgerufen',
+            data: {
+                total: users.length,
+                users: users
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Abrufen der User-Liste',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * PUT /api/admin/users/:id
+ * User bearbeiten (nur für Admins)
+ */
+router.put('/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const updates = req.body;
+
+        // Validierung: nur bestimmte Felder dürfen aktualisiert werden
+        const allowedUpdates = ['username', 'email', 'level', 'xp', 'role', 'is_active'];
+        const cleanUpdates = {};
+
+        Object.keys(updates).forEach(key => {
+            if (allowedUpdates.includes(key)) {
+                cleanUpdates[key] = updates[key];
+            }
+        });
+
+        if (Object.keys(cleanUpdates).length === 0) {
+            return res.status(400).json({
+                success: false,
+                code: 'INVALID_UPDATE',
+                message: 'Keine gültigen Update-Felder angegeben'
+            });
+        }
+
+        const result = await dbService.updateUser(userId, cleanUpdates);
+
+        res.json({
+            success: true,
+            code: 'USER_UPDATED',
+            message: result.message
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Aktualisieren des Users',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * DELETE /api/admin/users/:id
+ * User löschen (nur für Admins)
+ */
+router.delete('/admin/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+
+        // Sicherheit: User darf sich selbst nicht löschen
+        if (userId === req.user.userId) {
+            return res.status(400).json({
+                success: false,
+                code: 'CANNOT_DELETE_SELF',
+                message: 'Du kannst deinen eigenen Account nicht löschen'
+            });
+        }
+
+        const result = await dbService.deleteUser(userId);
+
+        res.json({
+            success: true,
+            code: 'USER_DELETED',
+            message: result.message
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ADMIN_ERROR',
+            message: 'Fehler beim Löschen des Users',
+            error: error.message
+        });
     }
 });
 

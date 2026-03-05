@@ -53,12 +53,14 @@ const getUserByEmail = (email) => {
                 id,
                 username,
                 email,
-                password_hash AS password_hash,
+                password_hash,
                 level,
                 xp,
                 streak_days,
                 last_quest_date,
                 theme,
+                role,
+                is_active,
                 created_at,
                 updated_at
             FROM users
@@ -66,6 +68,40 @@ const getUserByEmail = (email) => {
         `;
 
         db.get(sql, [email], (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(row);
+            }
+        });
+    });
+};
+
+/**
+ * User per Username finden (für Login mit Username)
+ */
+const getUserByUsername = (username) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT
+                id,
+                username,
+                email,
+                password_hash,
+                level,
+                xp,
+                streak_days,
+                last_quest_date,
+                theme,
+                role,
+                is_active,
+                created_at,
+                updated_at
+            FROM users
+            WHERE username = ?
+        `;
+
+        db.get(sql, [username], (err, row) => {
             if (err) {
                 reject(err);
             } else {
@@ -106,7 +142,7 @@ const getUserById = (id) => {
  */
 const updateUser = (id, updates) => {
     return new Promise((resolve, reject) => {
-        const allowedFields = ['username', 'level', 'xp', 'streak_days', 'theme', 'last_quest_date'];
+        const allowedFields = ['username', 'level', 'xp', 'streak_days', 'theme', 'last_quest_date', 'email', 'role', 'is_active'];
         const fields = [];
         const values = [];
 
@@ -135,6 +171,52 @@ const updateUser = (id, updates) => {
                 reject(new Error('User nicht gefunden'));
             } else {
                 resolve({ message: 'User erfolgreich aktualisiert', changes: this.changes });
+            }
+        });
+    });
+};
+
+/**
+ * Alle User holen (für Admin)
+ */
+const getAllUsers = () => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT
+                id,
+                username,
+                email,
+                level,
+                xp,
+                streak_days,
+                theme,
+                role,
+                is_active,
+                created_at,
+                updated_at
+            FROM users
+            ORDER BY created_at DESC
+        `;
+
+        db.all(sql, [], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                const normalizedRows = (rows || []).map((row) => ({
+                    id: row.ID ?? row.id,
+                    username: row.USERNAME ?? row.username,
+                    email: row.EMAIL ?? row.email,
+                    level: row.LEVEL ?? row.level ?? 1,
+                    xp: row.XP ?? row.xp ?? 0,
+                    streak_days: row.STREAK_DAYS ?? row.streak_days ?? 0,
+                    theme: row.THEME ?? row.theme,
+                    role: row.ROLE ?? row.role ?? 'user',
+                    is_active: row.IS_ACTIVE ?? row.is_active ?? 1,
+                    created_at: row.CREATED_AT ?? row.created_at,
+                    updated_at: row.UPDATED_AT ?? row.updated_at
+                }));
+
+                resolve(normalizedRows);
             }
         });
     });
@@ -395,7 +477,9 @@ module.exports = {
     // Users
     createUser,
     getUserByEmail,
+    getUserByUsername,
     getUserById,
+    getAllUsers,
     updateUser,
     deleteUser,
     verifyPassword,

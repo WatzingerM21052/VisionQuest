@@ -15,16 +15,19 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
 
   bool _isLoading = false;
   bool _showPassword = false;
   String? _errorMessage;
+  bool _useEmail = true; // true für Email, false für Username
 
   @override
   void dispose() {
     _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -42,7 +45,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       final result = await _authService.login(
-        email: _emailController.text.trim(),
+        email: _useEmail ? _emailController.text.trim() : null,
+        username: !_useEmail ? _usernameController.text.trim() : null,
         password: _passwordController.text,
       );
 
@@ -54,6 +58,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final username = result.username;
       if (username != null && username.isNotEmpty) {
         ref.read(appStateProvider.notifier).setUsername(username);
+      }
+
+      // User role in AppState speichern
+      final role = result.userRole;
+      if (role != null && role.isNotEmpty) {
+        ref.read(appStateProvider.notifier).setUserRole(role);
       }
 
       ScaffoldMessenger.of(
@@ -123,28 +133,117 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Email Field
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'E-Mail',
-                        prefixIcon: const Icon(Icons.email),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    // Login Method Toggle
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceVariant,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colorScheme.outline),
                       ),
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Bitte E-Mail eingeben.';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Bitte eine gültige E-Mail eingeben.';
-                        }
-                        return null;
-                      },
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _useEmail = true),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _useEmail
+                                      ? colorScheme.primary
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'E-Mail',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: _useEmail
+                                        ? colorScheme.onPrimary
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _useEmail = false),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: !_useEmail
+                                      ? colorScheme.primary
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Username',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: !_useEmail
+                                        ? colorScheme.onPrimary
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: 24),
+
+                    // Email or Username Field
+                    if (_useEmail)
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'E-Mail',
+                          prefixIcon: const Icon(Icons.email),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Bitte E-Mail eingeben.';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Bitte eine gültige E-Mail eingeben.';
+                          }
+                          return null;
+                        },
+                      )
+                    else
+                      TextFormField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          prefixIcon: const Icon(Icons.person),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        autofillHints: const [AutofillHints.username],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Bitte Username eingeben.';
+                          }
+                          if (value.length < 3) {
+                            return 'Username muss mindestens 3 Zeichen lang sein.';
+                          }
+                          return null;
+                        },
+                      ),
                     const SizedBox(height: 16),
 
                     // Password Field

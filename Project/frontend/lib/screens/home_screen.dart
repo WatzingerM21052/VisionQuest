@@ -520,6 +520,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ],
                       ),
 
+                      const SizedBox(height: 12),
+
+                      // Achievements Button
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(
+                            context,
+                          ).pushNamed(AppRoutes.achievements);
+                        },
+                        icon: const Icon(Icons.emoji_events),
+                        label: const Text('Achievements'),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: colorScheme.primary.withValues(alpha: 0.5),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 16),
                     ],
                   ),

@@ -29,6 +29,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   bool _isProcessing = false;
   String? _errorMessage;
   late Achievement _todayChallenge;
+  int _currentProgress = 0;
 
   @override
   void initState() {
@@ -47,10 +48,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Refresh challenge when returning to this screen
-      _selectTodayChallenge();
-    }
+    // Challenge stays until completed - no refresh on resume
   }
 
   Future<void> _initCamera() async {
@@ -96,8 +94,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   void _selectTodayChallenge() {
     final random = Random();
+    // Only select object scan achievements for scanner quests
+    final objectScanAchievements = allAchievements
+        .where((a) => a.type == AchievementType.objectScan)
+        .toList();
     setState(() {
-      _todayChallenge = allAchievements[random.nextInt(allAchievements.length)];
+      _todayChallenge =
+          objectScanAchievements[random.nextInt(objectScanAchievements.length)];
+      _currentProgress = 0; // Reset progress for new quest
     });
   }
 
@@ -251,15 +255,26 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       }
 
       // Check if detected object matches today's challenge
-      final isChallengeMatch = result.label.toLowerCase().contains(
-        _todayChallenge.objectLabel.toLowerCase(),
-      );
+      final isChallengeMatch =
+          _todayChallenge.objectLabel != null &&
+          result.label.toLowerCase().contains(
+            _todayChallenge.objectLabel!.toLowerCase(),
+          );
 
       if (isChallengeMatch) {
-        ref
-            .read(appStateProvider.notifier)
-            .unlockAchievement(_todayChallenge.id);
-        _showAchievementUnlock();
+        setState(() {
+          _currentProgress++;
+        });
+
+        // Check if quest is completed
+        if (_currentProgress >= _todayChallenge.targetCount) {
+          ref
+              .read(appStateProvider.notifier)
+              .unlockAchievement(_todayChallenge.id);
+          _showAchievementUnlock();
+          // Select new challenge after completing current one
+          _selectTodayChallenge();
+        }
       }
 
       await Navigator.of(
@@ -369,7 +384,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            '${_todayChallenge.icon} Scanne ${_todayChallenge.objectLabel} (0/${_todayChallenge.targetCount})',
+                            '${_todayChallenge.icon} Scanne ${_todayChallenge.objectLabel ?? 'Objekte'} ($_currentProgress/${_todayChallenge.targetCount})',
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: colorScheme.onSecondaryContainer,
                               fontWeight: FontWeight.w600,

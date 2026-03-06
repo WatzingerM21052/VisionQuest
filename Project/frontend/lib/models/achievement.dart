@@ -4,10 +4,11 @@ class Achievement {
     required this.id,
     required this.title,
     required this.description,
-    required this.objectLabel,
     required this.icon,
     required this.rarity,
     required this.targetCount,
+    required this.type,
+    this.objectLabel,
     this.isUnlocked = false,
     this.unlockedDate,
   });
@@ -15,10 +16,11 @@ class Achievement {
   final String id;
   final String title;
   final String description;
-  final String objectLabel;
+  final String? objectLabel; // Optional: nur für OBJECT_SCAN
   final String icon;
   final AchievementRarity rarity;
   final int targetCount;
+  final AchievementType type;
   bool isUnlocked;
   DateTime? unlockedDate;
 
@@ -30,6 +32,7 @@ class Achievement {
     String? icon,
     AchievementRarity? rarity,
     int? targetCount,
+    AchievementType? type,
     bool? isUnlocked,
     DateTime? unlockedDate,
   }) {
@@ -41,10 +44,17 @@ class Achievement {
       icon: icon ?? this.icon,
       rarity: rarity ?? this.rarity,
       targetCount: targetCount ?? this.targetCount,
+      type: type ?? this.type,
       isUnlocked: isUnlocked ?? this.isUnlocked,
       unlockedDate: unlockedDate ?? this.unlockedDate,
     );
   }
+}
+
+enum AchievementType {
+  objectScan, // Scanne X von Objekt Y
+  milestone, // Erreiche Level/XP/Streak
+  meta, // Spezielle/Alle Achievements
 }
 
 enum AchievementRarity {
@@ -62,6 +72,7 @@ enum AchievementRarity {
 
 /// Vordefinierte Achievements
 final allAchievements = [
+  // Object Scan Achievements
   Achievement(
     id: 'phone_finder',
     title: 'Handy-Finder',
@@ -70,6 +81,7 @@ final allAchievements = [
     icon: '📱',
     rarity: AchievementRarity.common,
     targetCount: 5,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'people_watcher',
@@ -79,6 +91,7 @@ final allAchievements = [
     icon: '👤',
     rarity: AchievementRarity.uncommon,
     targetCount: 10,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'book_lover',
@@ -88,6 +101,7 @@ final allAchievements = [
     objectLabel: 'book',
     icon: '📚',
     rarity: AchievementRarity.uncommon,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'tech_master',
@@ -97,6 +111,7 @@ final allAchievements = [
     icon: '💻',
     rarity: AchievementRarity.rare,
     targetCount: 3,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'beverage_collector',
@@ -106,6 +121,7 @@ final allAchievements = [
     icon: '🥤',
     rarity: AchievementRarity.uncommon,
     targetCount: 3,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'chair_expert',
@@ -115,6 +131,7 @@ final allAchievements = [
     icon: '🪑',
     rarity: AchievementRarity.common,
     targetCount: 7,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'time_keeper',
@@ -124,6 +141,7 @@ final allAchievements = [
     icon: '⏰',
     rarity: AchievementRarity.uncommon,
     targetCount: 5,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'tv_enthusiast',
@@ -133,6 +151,7 @@ final allAchievements = [
     icon: '📺',
     rarity: AchievementRarity.rare,
     targetCount: 10,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'keyboard_warrior',
@@ -142,6 +161,7 @@ final allAchievements = [
     icon: '⌨️',
     rarity: AchievementRarity.uncommon,
     targetCount: 5,
+    type: AchievementType.objectScan,
   ),
   Achievement(
     id: 'adventurer',
@@ -151,5 +171,55 @@ final allAchievements = [
     icon: '🎒',
     rarity: AchievementRarity.common,
     targetCount: 1,
+    type: AchievementType.objectScan,
+  ),
+
+  // Milestone Achievements
+  Achievement(
+    id: 'scanner_master',
+    title: 'Scanner-Meister',
+    description: 'Scanne insgesamt 100 Objekte',
+    icon: '📸',
+    rarity: AchievementRarity.rare,
+    targetCount: 100,
+    type: AchievementType.milestone,
+  ),
+  Achievement(
+    id: 'level_10',
+    title: 'Stufe 10',
+    description: 'Erreiche Level 10',
+    icon: '🔟',
+    rarity: AchievementRarity.epic,
+    targetCount: 10,
+    type: AchievementType.milestone,
+  ),
+  Achievement(
+    id: 'streak_champion',
+    title: 'Streak-Champion',
+    description: 'Halte eine 7-Tage-Streak',
+    icon: '🔥',
+    rarity: AchievementRarity.rare,
+    targetCount: 7,
+    type: AchievementType.milestone,
+  ),
+  Achievement(
+    id: 'xp_collector',
+    title: 'XP-Sammler',
+    description: 'Sammle 1000 Erfahrungspunkte',
+    icon: '💎',
+    rarity: AchievementRarity.uncommon,
+    targetCount: 1000,
+    type: AchievementType.milestone,
+  ),
+
+  // Meta Achievements
+  Achievement(
+    id: 'completionist',
+    title: 'Perfektionist',
+    description: 'Schalte alle anderen Achievements frei',
+    icon: '🏆',
+    rarity: AchievementRarity.legendary,
+    targetCount: 14, // Anzahl aller anderen Achievements
+    type: AchievementType.meta,
   ),
 ];

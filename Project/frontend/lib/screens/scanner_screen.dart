@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_routes.dart';
+import '../models/achievement.dart';
 import '../models/detection_focus_option.dart';
 import '../models/detection_model_option.dart';
 import '../providers/app_state_provider.dart';
@@ -16,7 +19,8 @@ class ScannerScreen extends ConsumerStatefulWidget {
   ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends ConsumerState<ScannerScreen> {
+class _ScannerScreenState extends ConsumerState<ScannerScreen>
+    with WidgetsBindingObserver {
   final _authService = AuthService();
   final _visionService = VisionService();
 
@@ -24,17 +28,29 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   bool _isInitializing = true;
   bool _isProcessing = false;
   String? _errorMessage;
+  late Achievement _todayChallenge;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initCamera();
+    _selectTodayChallenge();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh challenge when returning to this screen
+      _selectTodayChallenge();
+    }
   }
 
   Future<void> _initCamera() async {
@@ -78,6 +94,133 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     }
   }
 
+  void _selectTodayChallenge() {
+    final random = Random();
+    setState(() {
+      _todayChallenge = allAchievements[random.nextInt(allAchievements.length)];
+    });
+  }
+
+  void _showAchievementUnlock() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: colorScheme.primary.withAlpha((255 * 0.3).toInt()),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Achievement Icon with glow
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.primaryContainer,
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withAlpha(
+                          (255 * 0.4).toInt(),
+                        ),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    _todayChallenge.icon,
+                    style: const TextStyle(fontSize: 48),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Title
+                Text(
+                  'Achievement freigeschaltet!',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+
+                // Achievement Name
+                Text(
+                  _todayChallenge.title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+
+                // Description
+                Text(
+                  _todayChallenge.description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+
+                // Rarity Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _todayChallenge.rarity.stars,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _todayChallenge.rarity.displayName.toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSecondaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Close Button
+                FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Weiter'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _captureAndDetect() async {
     if (_controller == null || !_controller!.value.isInitialized) {
       return;
@@ -105,6 +248,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (!mounted) {
         return;
+      }
+
+      // Check if detected object matches today's challenge
+      final isChallengeMatch = result.label.toLowerCase().contains(
+        _todayChallenge.objectLabel.toLowerCase(),
+      );
+
+      if (isChallengeMatch) {
+        ref
+            .read(appStateProvider.notifier)
+            .unlockAchievement(_todayChallenge.id);
+        _showAchievementUnlock();
       }
 
       await Navigator.of(
@@ -185,6 +340,44 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           Expanded(child: Center(child: _buildPreview(theme))),
                         ],
                       ),
+                    ),
+                  ),
+                ),
+
+                // Today's Challenge Banner
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondaryContainer,
+                    border: Border(
+                      bottom: BorderSide(color: colorScheme.outlineVariant),
+                    ),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          color: colorScheme.secondary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '${_todayChallenge.icon} Scanne ${_todayChallenge.objectLabel} (0/${_todayChallenge.targetCount})',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: colorScheme.onSecondaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

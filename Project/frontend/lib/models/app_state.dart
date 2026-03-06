@@ -19,6 +19,7 @@ class AppState {
   ///   - [theme]: Aktuelles Theme ([AppThemeOption])
   ///   - [progress]: Quest-Progression ([QuestProgress])
   ///   - [logEntries]: Liste aller Quest-Erfolge (max 200 Einträge)
+  ///   - [unlockedAchievements]: Liste der entsperrten Achievement-IDs
   ///   - [username]: Eingeloggter Benutzername (optional)
   ///   - [userRole]: Benutzerrolle (user | admin, optional)
   const AppState({
@@ -27,6 +28,7 @@ class AppState {
     required this.detectionFocus,
     required this.progress,
     required this.logEntries,
+    required this.unlockedAchievements,
     this.username,
     this.userRole,
   });
@@ -37,6 +39,7 @@ class AppState {
   /// - Theme auf System-Einstellung
   /// - Spieler auf Level 1, 0 XP
   /// - Leeres Quest-Log
+  /// - Leere Liste entsperrter Achievements
   factory AppState.initial() {
     return const AppState(
       theme: AppThemeOption.system,
@@ -44,6 +47,7 @@ class AppState {
       detectionFocus: DetectionFocusOption.balanced,
       progress: QuestProgress(totalXp: 0, level: 1, streak: 0),
       logEntries: [],
+      unlockedAchievements: [],
     );
   }
 
@@ -52,6 +56,7 @@ class AppState {
   final DetectionFocusOption detectionFocus;
   final QuestProgress progress;
   final List<QuestLogEntry> logEntries;
+  final List<String> unlockedAchievements;
   final String? username;
   final String? userRole;
 
@@ -61,6 +66,7 @@ class AppState {
     DetectionFocusOption? detectionFocus,
     QuestProgress? progress,
     List<QuestLogEntry>? logEntries,
+    List<String>? unlockedAchievements,
     String? username,
     String? userRole,
   }) {
@@ -70,6 +76,7 @@ class AppState {
       detectionFocus: detectionFocus ?? this.detectionFocus,
       progress: progress ?? this.progress,
       logEntries: logEntries ?? this.logEntries,
+      unlockedAchievements: unlockedAchievements ?? this.unlockedAchievements,
       username: username ?? this.username,
       userRole: userRole ?? this.userRole,
     );

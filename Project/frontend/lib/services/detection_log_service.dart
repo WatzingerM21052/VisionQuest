@@ -227,6 +227,111 @@ class DetectionLogService {
     return await _getToken();
   }
 
+  /// Löscht einen einzelnen Detection Log Eintrag
+  Future<void> deleteDetection(String label, DateTime timestamp) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw DetectionLogException(
+          'Authentifizierung erforderlich',
+          code: 'NO_TOKEN',
+        );
+      }
+
+      final response = await http.delete(
+        Uri.parse(
+          '$_baseUrl/detection-log?label=$label&timestamp=${timestamp.toIso8601String()}',
+        ),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw DetectionLogException(
+          errorData['message'] ?? 'Fehler beim Löschen des Eintrags',
+          code: errorData['code'],
+        );
+      }
+    } catch (e) {
+      if (e is DetectionLogException) {
+        rethrow;
+      }
+      throw DetectionLogException('Fehler beim Löschen des Eintrags: $e');
+    }
+  }
+
+  /// Speichert die entsperrten Achievements im Backend
+  Future<void> saveAchievements(List<String> unlockedAchievementIds) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw DetectionLogException(
+          'Authentifizierung erforderlich',
+          code: 'NO_TOKEN',
+        );
+      }
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/achievements'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'unlockedAchievements': unlockedAchievementIds}),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final errorData = jsonDecode(response.body);
+        throw DetectionLogException(
+          errorData['message'] ?? 'Fehler beim Speichern der Achievements',
+          code: errorData['code'],
+        );
+      }
+    } catch (e) {
+      if (e is DetectionLogException) {
+        rethrow;
+      }
+      throw DetectionLogException('Fehler beim Speichern der Achievements: $e');
+    }
+  }
+
+  /// Lädt die entsperrten Achievements vom Backend
+  Future<List<String>> loadAchievements() async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw DetectionLogException(
+          'Authentifizierung erforderlich',
+          code: 'NO_TOKEN',
+        );
+      }
+
+      final response = await http.get(
+        Uri.parse('$_baseUrl/achievements'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final achievements =
+            (data['data']['unlockedAchievements'] as List?)?.cast<String>() ??
+            [];
+        return achievements;
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw DetectionLogException(
+          errorData['message'] ?? 'Fehler beim Laden der Achievements',
+          code: errorData['code'],
+        );
+      }
+    } catch (e) {
+      if (e is DetectionLogException) {
+        rethrow;
+      }
+      throw DetectionLogException('Fehler beim Laden der Achievements: $e');
+    }
+  }
+
   /// Holt den Token aus dem SecureStorage
   Future<String?> _getToken() async {
     return await _storage.read(key: _secureStorage);

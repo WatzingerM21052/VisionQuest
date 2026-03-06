@@ -25,6 +25,9 @@ class AppRoutes {
   /// Settings-Screen für Theme-Einstellungen und Benutzerkonfiguration.
   static const settings = '/settings';
 
+  /// Achievements-Screen zeigt alle verfügbaren Achievements.
+  static const achievements = '/achievements';
+
   /// Admin-Screen für Benutzerverwaltung (nur für Admins).
   static const admin = '/admin';
 }

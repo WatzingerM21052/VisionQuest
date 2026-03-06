@@ -3,11 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_state_provider.dart';
 
-class QuestLogScreen extends ConsumerWidget {
+class QuestLogScreen extends ConsumerStatefulWidget {
   const QuestLogScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QuestLogScreen> createState() => _QuestLogScreenState();
+}
+
+class _QuestLogScreenState extends ConsumerState<QuestLogScreen> {
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final entries = ref.watch(
@@ -91,131 +96,186 @@ class QuestLogScreen extends ConsumerWidget {
                               final entry = entries[index];
                               return Card(
                                 elevation: 1.5,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                                child: Stack(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  colorScheme.primaryContainer,
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: colorScheme.primary
-                                                    .withValues(alpha: 0.2),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: colorScheme
+                                                      .primaryContainer,
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  border: Border.all(
+                                                    color: colorScheme.primary
+                                                        .withValues(alpha: 0.2),
+                                                  ),
+                                                ),
+                                                child: Icon(
+                                                  _iconForLabel(entry.label),
+                                                  color: colorScheme.primary,
+                                                ),
                                               ),
-                                            ),
-                                            child: Icon(
-                                              _iconForLabel(entry.label),
-                                              color: colorScheme.primary,
-                                            ),
+                                              const Spacer(),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 5,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: colorScheme
+                                                      .secondaryContainer,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        999,
+                                                      ),
+                                                ),
+                                                child: Text(
+                                                  '+${entry.xp} XP',
+                                                  style: theme
+                                                      .textTheme
+                                                      .labelMedium
+                                                      ?.copyWith(
+                                                        color: colorScheme
+                                                            .onSecondaryContainer,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const Spacer(),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            entry.label,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 8),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 5,
+                                              horizontal: 8,
+                                              vertical: 6,
                                             ),
                                             decoration: BoxDecoration(
                                               color: colorScheme
-                                                  .secondaryContainer,
+                                                  .surfaceContainerHighest,
                                               borderRadius:
-                                                  BorderRadius.circular(999),
+                                                  BorderRadius.circular(8),
                                             ),
-                                            child: Text(
-                                              '+${entry.xp} XP',
-                                              style: theme.textTheme.labelMedium
-                                                  ?.copyWith(
-                                                    color: colorScheme
-                                                        .onSecondaryContainer,
-                                                    fontWeight: FontWeight.w700,
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.schedule,
+                                                  size: 14,
+                                                  color: colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    _formatTimestamp(
+                                                      entry.timestamp,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: colorScheme
+                                                              .onSurfaceVariant,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            'Confidence ${(entry.confidence * 100).toStringAsFixed(1)}%',
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  color: colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            child: LinearProgressIndicator(
+                                              value: entry.confidence.clamp(
+                                                0,
+                                                1,
+                                              ),
+                                              minHeight: 6,
+                                              backgroundColor: colorScheme
+                                                  .surfaceContainerHighest,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    entry.confidence >= 0.75
+                                                        ? colorScheme.tertiary
+                                                        : colorScheme.primary,
                                                   ),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        entry.label,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
+                                    ),
+                                    // Delete Button
+                                    Positioned(
+                                      top: 4,
+                                      right: 4,
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: Tooltip(
+                                          message: 'Eintrag löschen',
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
                                             ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: colorScheme
-                                              .surfaceContainerHighest,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
+                                            onTap: () {
+                                              _showDeleteConfirmation(
+                                                context,
+                                                index,
+                                              );
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: colorScheme
+                                                    .errorContainer
+                                                    .withValues(alpha: 0.8),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                Icons.close,
+                                                size: 16,
+                                                color: colorScheme.error,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.schedule,
-                                              size: 14,
-                                              color:
-                                                  colorScheme.onSurfaceVariant,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Expanded(
-                                              child: Text(
-                                                _formatTimestamp(
-                                                  entry.timestamp,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      color: colorScheme
-                                                          .onSurfaceVariant,
-                                                    ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
                                       ),
-                                      const Spacer(),
-                                      Text(
-                                        'Confidence ${(entry.confidence * 100).toStringAsFixed(1)}%',
-                                        style: theme.textTheme.labelSmall
-                                            ?.copyWith(
-                                              color:
-                                                  colorScheme.onSurfaceVariant,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: LinearProgressIndicator(
-                                          value: entry.confidence.clamp(0, 1),
-                                          minHeight: 6,
-                                          backgroundColor: colorScheme
-                                              .surfaceContainerHighest,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                entry.confidence >= 0.75
-                                                    ? colorScheme.tertiary
-                                                    : colorScheme.primary,
-                                              ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               );
                             },
@@ -258,5 +318,34 @@ class QuestLogScreen extends ConsumerWidget {
     if (normalized.contains('laptop')) return Icons.laptop;
     if (normalized.contains('cup')) return Icons.coffee;
     return Icons.category;
+  }
+
+  void _showDeleteConfirmation(BuildContext context, int index) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eintrag löschen?'),
+        content: const Text(
+          'Dieser Eintrag wird unwiederbringlich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(appStateProvider.notifier).deleteLogEntry(index);
+            },
+            child: const Text('Löschen'),
+          ),
+        ],
+      ),
+    );
   }
 }

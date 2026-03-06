@@ -165,6 +165,81 @@ class AppStateNotifier extends StateNotifier<AppState> {
     });
   }
 
+  /// Löscht einen Eintrag aus dem Quest-Log (lokal und vom Backend).
+  ///
+  /// Parameter: [index] - Index des zu löschenden Eintrags in der logEntries Liste
+  void deleteLogEntry(int index) {
+    if (index < 0 || index >= state.logEntries.length) {
+      return;
+    }
+
+    final entry = state.logEntries[index];
+    final updatedEntries = List<QuestLogEntry>.from(state.logEntries)
+      ..removeAt(index);
+
+    state = state.copyWith(logEntries: updatedEntries);
+
+    // Lösche asynchron vom Backend
+    _deleteDetectionLogFromServer(entry);
+  }
+
+  /// Löscht einen Detection Log vom Backend (asynchron im Hintergrund)
+  void _deleteDetectionLogFromServer(QuestLogEntry entry) {
+    Future.microtask(() async {
+      try {
+        final service = DetectionLogService();
+        await service.deleteDetection(entry.label, entry.timestamp);
+      } catch (e) {
+        print('Fehler beim Löschen des Detection Logs: $e');
+        // Fehler werden ignoriert
+      }
+    });
+  }
+
+  /// Entsperrt ein Achievement für den aktuellen Benutzer.
+  ///
+  /// Parameter: [achievementId] - ID des freizuschaltenden Achievements
+  void unlockAchievement(String achievementId) {
+    if (state.unlockedAchievements.contains(achievementId)) {
+      return; // Bereits entsperrt
+    }
+
+    final updatedUnlocked = [...state.unlockedAchievements, achievementId];
+    state = state.copyWith(unlockedAchievements: updatedUnlocked);
+
+    // Speichere asynchron im Backend
+    _saveAchievementsToServer(updatedUnlocked);
+  }
+
+  /// Speichert die entsperrten Achievements im Backend (asynchron).
+  void _saveAchievementsToServer(List<String> unlockedAchievements) {
+    Future.microtask(() async {
+      try {
+        final service = DetectionLogService();
+        await service.saveAchievements(unlockedAchievements);
+      } catch (e) {
+        print('Fehler beim Speichern der Achievements: $e');
+        // Fehler werden ignoriert - lokal gespeichert
+      }
+    });
+  }
+
+  /// Lädt entsperrte Achievements vom Backend.
+  Future<void> loadAchievements() async {
+    try {
+      final service = DetectionLogService();
+      final unlockedIds = await service.loadAchievements();
+      state = state.copyWith(unlockedAchievements: unlockedIds);
+    } on DetectionLogException catch (e) {
+      if (e.code == 'NO_TOKEN') {
+        return;
+      }
+      print('Fehler beim Laden der Achievements: $e');
+    } catch (e) {
+      print('Fehler beim Laden der Achievements: $e');
+    }
+  }
+
   int _xpFromConfidence(double confidence) {
     return (confidence * 100).round().clamp(10, 100);
   }

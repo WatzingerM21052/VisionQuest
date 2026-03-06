@@ -100,6 +100,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Lade Detection History nach erfolgreichem Login
       await ref.read(appStateProvider.notifier).loadStoredEntries();
 
+      // Lade Achievements nach erfolgreichem Login
+      await ref.read(appStateProvider.notifier).loadAchievements();
+
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on AuthException catch (error) {
       setState(() {

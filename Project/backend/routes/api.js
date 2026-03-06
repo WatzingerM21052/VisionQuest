@@ -1278,18 +1278,28 @@ router.get('/detection-log/stats', authenticateToken, async (req, res) => {
 
 /**
  * DELETE /api/detection-log
- * Löscht die komplette Detection History (Datenschutz)
+ * Löscht entweder einen einzelnen Eintrag oder die komplette Detection History
+ * Query-Parameter: label (optional), timestamp (optional)
  */
 router.delete('/detection-log', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
+        const { label, timestamp } = req.query;
 
-        const result = await dbService.deleteDetectionHistory(userId);
+        let result;
+
+        if (label && timestamp) {
+            // Lösche einen einzelnen Eintrag
+            result = await dbService.deleteDetectionEntry(userId, label, timestamp);
+        } else {
+            // Lösche die komplette History
+            result = await dbService.deleteDetectionHistory(userId);
+        }
 
         res.json({
             success: true,
             code: 'HISTORY_DELETED',
-            message: 'Detection History gelöscht',
+            message: 'Detection Eintrag(e) gelöscht',
             data: result
         });
     } catch (error) {
@@ -1297,6 +1307,67 @@ router.delete('/detection-log', authenticateToken, async (req, res) => {
             success: false,
             code: 'LOG_ERROR',
             message: 'Fehler beim Löschen der History',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/achievements
+ * Speichert die entsperrten Achievements für den Benutzer
+ */
+router.post('/achievements', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { unlockedAchievements } = req.body;
+
+        if (!Array.isArray(unlockedAchievements)) {
+            return res.status(400).json({
+                success: false,
+                code: 'INVALID_INPUT',
+                message: 'unlockedAchievements muss ein Array sein'
+            });
+        }
+
+        const result = await dbService.saveAchievements(userId, unlockedAchievements);
+
+        res.json({
+            success: true,
+            code: 'ACHIEVEMENTS_SAVED',
+            message: 'Achievements gespeichert',
+            data: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ACHIEVEMENT_ERROR',
+            message: 'Fehler beim Speichern der Achievements',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/achievements
+ * Lädt die entsperrten Achievements für den Benutzer
+ */
+router.get('/achievements', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const result = await dbService.loadAchievements(userId);
+
+        res.json({
+            success: true,
+            code: 'ACHIEVEMENTS_LOADED',
+            message: 'Achievements geladen',
+            data: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'ACHIEVEMENT_ERROR',
+            message: 'Fehler beim Laden der Achievements',
             error: error.message
         });
     }

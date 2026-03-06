@@ -640,6 +640,86 @@ const deleteDetectionHistory = (userId) => {
     });
 };
 
+/**
+ * Löscht einen einzelnen Detection-Eintrag
+ */
+const deleteDetectionEntry = (userId, label, timestamp) => {
+    return new Promise((resolve, reject) => {
+        const sql = `DELETE FROM DETECTION_HISTORY WHERE USER_ID = ? AND LABEL = ? AND CREATED_AT = ?`;
+        db.run(sql, [userId, label, timestamp], function (err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    deletedRows: this.changes
+                });
+            }
+        });
+    });
+};
+
+/**
+ * Speichert die entsperrten Achievements für einen User
+ */
+const saveAchievements = (userId, achievementIds) => {
+    return new Promise((resolve, reject) => {
+        // Erst alle alten Achievements löschen
+        const deleteSql = `DELETE FROM ACHIEVEMENTS WHERE USER_ID = ?`;
+        db.run(deleteSql, [userId], function (err) {
+            if (err) {
+                return reject(err);
+            }
+
+            // Dann alle neuen Achievements einfügen
+            if (achievementIds.length === 0) {
+                return resolve({
+                    saved: 0,
+                    achievement_ids: []
+                });
+            }
+
+            const insertSql = `INSERT INTO ACHIEVEMENTS (USER_ID, ACHIEVEMENT_NAME, ACHIEVEMENT_DESCRIPTION, UNLOCKED_AT) 
+                              VALUES (?, ?, ?, ?)`;
+            let inserted = 0;
+
+            achievementIds.forEach((id) => {
+                db.run(insertSql, [userId, id, id, new Date().toISOString()], function (err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    inserted++;
+
+                    if (inserted === achievementIds.length) {
+                        resolve({
+                            saved: inserted,
+                            achievement_ids: achievementIds
+                        });
+                    }
+                });
+            });
+        });
+    });
+};
+
+/**
+ * Lädt alle Achievements für einen User
+ */
+const loadAchievements = (userId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT ACHIEVEMENT_NAME as id FROM ACHIEVEMENTS WHERE USER_ID = ?`;
+        db.all(sql, [userId], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                const unlockedAchievements = (rows || []).map(row => row.id);
+                resolve({
+                    unlockedAchievements
+                });
+            }
+        });
+    });
+};
+
 module.exports = {
     // Users
     createUser,
@@ -667,5 +747,10 @@ module.exports = {
     getDetectionHistory,
     getTodayDetections,
     countDetectionsForLabel,
-    deleteDetectionHistory
+    deleteDetectionHistory,
+    deleteDetectionEntry,
+
+    // Achievements
+    saveAchievements,
+    loadAchievements
 };

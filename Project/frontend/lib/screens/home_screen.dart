@@ -602,27 +602,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return matches;
   }
 
-  // Prüft ob ein Label zu irgendeiner Quest gehört
-  bool _isQuestTarget(String label) {
-    const allQuestLabels = [
-      // Quest 1: Handy
-      'cell phone',
-      // Quest 2: Personen
-      'person',
-      // Quest 3: Getränke
-      'cup', 'bottle', 'wine glass',
-      // Quest 4: Lernobjekte
-      'book', 'laptop',
-      // Quest 5: Alltagsobjekte
-      'chair', 'backpack', 'clock',
-      // Quest 6: Tech-Objekte
-      'mouse', 'keyboard', 'tv',
-    ];
-
-    final normalized = label.toLowerCase();
-    return allQuestLabels.any((target) => normalized.contains(target));
-  }
-
   Widget _buildStatCard(
     ThemeData theme,
     ColorScheme colorScheme, {

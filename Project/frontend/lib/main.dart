@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_routes.dart';
 import 'providers/app_state_provider.dart';
+import 'screens/achievements_screen.dart';
 import 'screens/admin_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
@@ -86,6 +87,8 @@ class VisionQuestApp extends ConsumerWidget {
         page = const QuestLogScreen();
       case AppRoutes.settings:
         page = const SettingsScreen();
+      case AppRoutes.achievements:
+        page = const AchievementsScreen();
       case AppRoutes.admin:
         page = const AdminScreen();
       case AppRoutes.reward:

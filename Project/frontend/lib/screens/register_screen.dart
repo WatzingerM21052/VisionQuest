@@ -88,6 +88,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       // Lade Detection History nach erfolgreichem Register
       await ref.read(appStateProvider.notifier).loadStoredEntries();
 
+      // Lade Achievements nach erfolgreichem Register
+      await ref.read(appStateProvider.notifier).loadAchievements();
+
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on AuthException catch (error) {
       setState(() {

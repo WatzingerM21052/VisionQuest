@@ -76,18 +76,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appStateProvider.select((state) => state.logEntries),
     );
     final today = DateTime.now();
-    final totalScanned = logEntries.length;
-    final totalFound = logEntries
-        .where((entry) => _isFoundLabel(entry.label))
-        .length;
+
+    // Heutige Einträge filtern
     final todayEntries = logEntries.where((entry) {
       final t = entry.timestamp;
       return t.year == today.year &&
           t.month == today.month &&
           t.day == today.day;
     }).toList();
+
+    // Daily Quest für heute
     final dailyQuest = _questForDate(today);
-    final foundToday = _countQuestMatches(todayEntries, dailyQuest);
+
+    // Stats berechnen
+    final totalScanned = todayEntries.length; // Heutige Scans
+    final totalFound = logEntries
+        .where((entry) => _isQuestTarget(entry.label))
+        .length; // ALLE Scans die zu Quests passen
+    final foundToday = _countQuestMatches(
+      todayEntries,
+      dailyQuest,
+    ); // Heutige Quest-Matches
     final dailyTarget = dailyQuest.requiredCount;
     final questCompleted = foundToday >= dailyTarget;
 
@@ -595,20 +604,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return matches;
   }
 
-  bool _isFoundLabel(String label) {
-    final normalized = label.trim().toLowerCase();
-    if (normalized.isEmpty) {
-      return false;
-    }
+  // Prüft ob ein Label zu irgendeiner Quest gehört
+  bool _isQuestTarget(String label) {
+    const allQuestLabels = [
+      // Quest 1: Handy
+      'cell phone',
+      // Quest 2: Personen
+      'person',
+      // Quest 3: Getränke
+      'cup', 'bottle', 'wine glass',
+      // Quest 4: Lernobjekte
+      'book', 'laptop',
+      // Quest 5: Alltagsobjekte
+      'chair', 'backpack', 'clock',
+      // Quest 6: Tech-Objekte
+      'mouse', 'keyboard', 'tv',
+    ];
 
-    const notDetectedLabels = {
-      'nichts erkannt',
-      'kein objekt erkannt',
-      'no object detected',
-      'nothing detected',
-    };
-
-    return !notDetectedLabels.contains(normalized);
+    final normalized = label.toLowerCase();
+    return allQuestLabels.any((target) => normalized.contains(target));
   }
 
   Widget _buildStatCard(

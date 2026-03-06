@@ -504,6 +504,142 @@ const updateUserStats = (userId, updates) => {
     });
 };
 
+// ============ DETECTION HISTORY CRUD ============
+
+/**
+ * Detection Scan speichern
+ */
+const addDetectionLog = (userId, label, confidence) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            INSERT INTO detection_history (user_id, label, confidence)
+            VALUES (?, ?, ?)
+        `;
+
+        db.run(sql, [userId, label, confidence], function (err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    id: this.lastID,
+                    userId,
+                    label,
+                    confidence,
+                    createdAt: new Date().toISOString(),
+                    message: 'Detection geloggt'
+                });
+            }
+        });
+    });
+};
+
+/**
+ * Detection History für User abrufen (optional mit Datum-Filter)
+ */
+const getDetectionHistory = (userId, daysBack = null) => {
+    return new Promise((resolve, reject) => {
+        let sql = `
+            SELECT
+                id,
+                user_id,
+                label,
+                confidence,
+                created_at
+            FROM detection_history
+            WHERE user_id = ?
+        `;
+
+        let params = [userId];
+
+        // Optional: nur letzte X Tage
+        if (daysBack) {
+            sql += ` AND created_at >= datetime('now', '-' || ? || ' days')`;
+            params.push(daysBack);
+        }
+
+        // Neueste zuerst
+        sql += ` ORDER BY created_at DESC LIMIT 1000`;
+
+        db.all(sql, params, (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows || []);
+            }
+        });
+    });
+};
+
+/**
+ * Heutige Detections für User (für Stats)
+ */
+const getTodayDetections = (userId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT
+                id,
+                label,
+                confidence,
+                created_at
+            FROM detection_history
+            WHERE user_id = ?
+            AND DATE(created_at) = DATE('now')
+            ORDER BY created_at DESC
+        `;
+
+        db.all(sql, [userId], (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows || []);
+            }
+        });
+    });
+};
+
+/**
+ * Detections für einen Quest-Label zählen (für Daily Quest Check)
+ */
+const countDetectionsForLabel = (userId, label, daysBack = 1) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT COUNT(*) as count
+            FROM detection_history
+            WHERE user_id = ?
+            AND LOWER(label) LIKE LOWER(?)
+            AND created_at >= datetime('now', '-' || ? || ' days')
+        `;
+
+        db.get(sql, [userId, `%${label}%`, daysBack], (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(row?.count || 0);
+            }
+        });
+    });
+};
+
+/**
+ * Detection History löschen (z.B. für Datenschutz)
+ */
+const deleteDetectionHistory = (userId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `DELETE FROM detection_history WHERE user_id = ?`;
+
+        db.run(sql, [userId], function (err) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({
+                    message: 'Detection History gelöscht',
+                    deletedRows: this.changes
+                });
+            }
+        });
+    });
+};
+
 module.exports = {
     // Users
     createUser,
@@ -524,5 +660,12 @@ module.exports = {
     deleteQuest,
 
     // Stats
-    updateUserStats
+    updateUserStats,
+
+    // Detection History
+    addDetectionLog,
+    getDetectionHistory,
+    getTodayDetections,
+    countDetectionsForLabel,
+    deleteDetectionHistory
 };

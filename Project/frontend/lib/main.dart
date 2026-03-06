@@ -23,7 +23,7 @@ Future<void> main() async {
 
   final container = ProviderContainer();
 
-  // Lade gespeicherte Quest-Log-Einträge aus lokalem Storage
+  // Lade gespeicherte Quest-Log-Einträge aus dem Backend
   await container.read(appStateProvider.notifier).loadStoredEntries();
 
   runApp(

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 
 class AuthException implements Exception {
   final String message;
@@ -138,7 +139,7 @@ class SecureTokenStorage implements TokenStorage {
 
 class AuthService {
   AuthService({
-    this.baseUrl = 'http://localhost:5000/api',
+    this.baseUrl = ApiConfig.baseUrl,
     http.Client? client,
     TokenStorage? storage,
   }) : _client = client ?? http.Client(),

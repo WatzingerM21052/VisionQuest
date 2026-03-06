@@ -6,7 +6,7 @@ import '../models/detection_focus_option.dart';
 import '../models/detection_model_option.dart';
 import '../models/quest_log_entry.dart';
 import '../models/quest_progress.dart';
-import '../services/quest_log_storage_service.dart';
+import '../services/detection_log_service.dart';
 
 /// Globaler Riverpod Provider für [AppState] State Management.
 ///
@@ -63,14 +63,27 @@ class AppStateNotifier extends StateNotifier<AppState> {
     state = state.copyWith(userRole: role);
   }
 
-  /// Lädt gespeicherte Quest-Log-Einträge aus lokalem Storage.
+  /// Lädt die Detection-Historie vom Backend/Server.
   ///
-  /// Sollte beim App-Start aufgerufen werden, um die Detection-Historie
-  /// wiederherzustellen.
+  /// Wird beim App-Start und nach dem Login aufgerufen.
+  /// Ignoriert Fehler wenn Benutzer nicht eingeloggt ist.
   Future<void> loadStoredEntries() async {
-    final entries = await QuestLogStorageService.loadEntries();
-    if (entries.isNotEmpty) {
-      state = state.copyWith(logEntries: entries);
+    try {
+      final service = DetectionLogService();
+      final entries = await service.getDetectionHistory();
+      if (entries.isNotEmpty) {
+        state = state.copyWith(logEntries: entries);
+      }
+    } on DetectionLogException catch (e) {
+      // Erwarteter Fehler wenn nicht eingeloggt (NO_TOKEN)
+      if (e.code == 'NO_TOKEN') {
+        return;
+      }
+      // Andere Fehler Protokollieren aber nicht werfen
+      print('Fehler beim Laden der Detection History: $e');
+    } catch (e) {
+      // Unerwartete Fehler ignorieren
+      print('Fehler beim Laden der Detection History: $e');
     }
   }
 
@@ -97,8 +110,8 @@ class AppStateNotifier extends StateNotifier<AppState> {
   /// 1. Normalisiert die Confidence auf 0.0-1.0
   /// 2. Berechnet XP basierend auf Genauigkeit (10-100 XP)
   /// 3. Aktualisiert Level und Streak
-  /// 4. Speichert Eintrag im Quest-Log (maximal 200 Einträge)
-  /// 5. Persistiert die Einträge in lokalem Storage
+  /// 4. Speichert Eintrag im Quest-Log (lokal)
+  /// 5. Sendet den Scan zum Backend/Server
   ///
   /// Parameter:
   ///   - [label]: Name des erkannten Objekts
@@ -135,8 +148,21 @@ class AppStateNotifier extends StateNotifier<AppState> {
       logEntries: updatedEntries,
     );
 
-    // Persistiere Einträge in lokalem Storage
-    QuestLogStorageService.saveEntries(updatedEntries);
+    // Sende Scan asynchron zum Backend
+    _sendDetectionLogToServer(label, normalizedConfidence);
+  }
+
+  /// Sendet einen Detection Log zum Backend (asynchron im Hintergrund)
+  void _sendDetectionLogToServer(String label, double confidence) {
+    Future.microtask(() async {
+      try {
+        final service = DetectionLogService();
+        await service.logDetection(label, confidence);
+      } catch (e) {
+        print('Fehler beim Senden des Detection Logs: $e');
+        // Fehler werden ignoriert - Daten bleiben lokal
+      }
+    });
   }
 
   int _xpFromConfidence(double confidence) {

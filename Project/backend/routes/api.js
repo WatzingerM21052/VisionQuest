@@ -1141,4 +1141,165 @@ router.get('/admin/activity', authenticateToken, requireAdmin, async (req, res) 
     }
 });
 
+// ============ DETECTION HISTORY ROUTES ============
+
+/**
+ * POST /api/detection-log
+ * Speichert einen neuen Detection Scan
+ */
+router.post('/detection-log', authenticateToken, async (req, res) => {
+    try {
+        const { label, confidence } = req.body;
+        const userId = req.user.userId;
+
+        if (!label || confidence === undefined) {
+            return res.status(400).json({
+                success: false,
+                code: 'INVALID_INPUT',
+                message: 'Label und Confidence erforderlich'
+            });
+        }
+
+        const result = await dbService.addDetectionLog(userId, label, confidence);
+
+        res.status(201).json({
+            success: true,
+            code: 'DETECTION_LOGGED',
+            message: 'Scan geloggt',
+            data: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'LOG_ERROR',
+            message: 'Fehler beim Speichern des Scans',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/detection-log
+ * Holt die Detection History für den User
+ */
+router.get('/detection-log', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const daysBack = req.query.days ? parseInt(req.query.days) : null;
+
+        const history = await dbService.getDetectionHistory(userId, daysBack);
+
+        res.json({
+            success: true,
+            code: 'HISTORY_RETRIEVED',
+            message: 'Detection History abgerufen',
+            data: {
+                entries: history,
+                count: history.length
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'LOG_ERROR',
+            message: 'Fehler beim Abrufen der History',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/detection-log/today
+ * Holt nur die heutigen Detections
+ */
+router.get('/detection-log/today', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const detections = await dbService.getTodayDetections(userId);
+
+        res.json({
+            success: true,
+            code: 'TODAY_DETECTIONS_RETRIEVED',
+            message: 'Heutige Detections abgerufen',
+            data: {
+                entries: detections,
+                count: detections.length,
+                date: new Date().toISOString().split('T')[0]
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'LOG_ERROR',
+            message: 'Fehler beim Abrufen der heutigen Detections',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/detection-log/stats
+ * Holt Stats für detections (z.B. für Dashboard)
+ */
+router.get('/detection-log/stats', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        // Heutige Detections für Stats
+        const todayDetections = await dbService.getTodayDetections(userId);
+
+        // Alle Detections (allzeit)
+        const allDetections = await dbService.getDetectionHistory(userId);
+
+        // Zähle eindeutige Labels
+        const uniqueLabels = new Set(allDetections.map(d => d.label));
+
+        res.json({
+            success: true,
+            code: 'STATS_RETRIEVED',
+            message: 'Detection Stats abgerufen',
+            data: {
+                todayScans: todayDetections.length,
+                allTimeScans: allDetections.length,
+                uniqueObjectsFound: uniqueLabels.size,
+                lastScanTime: allDetections[0]?.created_at || null
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'LOG_ERROR',
+            message: 'Fehler beim Abrufen der Stats',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * DELETE /api/detection-log
+ * Löscht die komplette Detection History (Datenschutz)
+ */
+router.delete('/detection-log', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const result = await dbService.deleteDetectionHistory(userId);
+
+        res.json({
+            success: true,
+            code: 'HISTORY_DELETED',
+            message: 'Detection History gelöscht',
+            data: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            code: 'LOG_ERROR',
+            message: 'Fehler beim Löschen der History',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

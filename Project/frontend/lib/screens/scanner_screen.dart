@@ -46,11 +46,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Challenge stays until completed - no refresh on resume
-  }
-
+  /// Initialisiert die Kamera mit Auto-Focus und Auto-Exposure.
+  ///
+  /// Setzt [_isInitializing] und [_errorMessage] basierend auf dem Ergebnis.
   Future<void> _initCamera() async {
     try {
       final cameras = await availableCameras();
@@ -92,19 +90,28 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
   }
 
+  /// Wählt eine zufällige Scanner-Quest aus allen Object-Scan Achievements.
+  ///
+  /// Setzt den Fortschritt zurück auf 0. Wird beim Start und nach Abschluss
+  /// einer Quest aufgerufen.
   void _selectTodayChallenge() {
     final random = Random();
-    // Only select object scan achievements for scanner quests
     final objectScanAchievements = allAchievements
         .where((a) => a.type == AchievementType.objectScan)
         .toList();
+
+    if (objectScanAchievements.isEmpty) {
+      return; // Fail-safe: keine scannable Achievements verfügbar
+    }
+
     setState(() {
       _todayChallenge =
           objectScanAchievements[random.nextInt(objectScanAchievements.length)];
-      _currentProgress = 0; // Reset progress for new quest
+      _currentProgress = 0;
     });
   }
 
+  /// Zeigt einen Erfolgs-Dialog an, wenn ein Achievement freigeschaltet wurde.
   void _showAchievementUnlock() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -225,6 +232,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
   }
 
+  /// Macht ein Foto und sendet es zur Objekterkennung an das Backend.
+  ///
+  /// Flow:
+  /// 1. Check ob Kamera bereit ist
+  /// 2. Hole Auth-Token
+  /// 3. Mache Foto und sende zur Detection
+  /// 4. Check ob Objekt zur aktuellen Quest passt
+  /// 5. Update Quest-Fortschritt und entsperre Achievement bei Completion
+  /// 6. Navigiere zum Reward Screen
   Future<void> _captureAndDetect() async {
     if (_controller == null || !_controller!.value.isInitialized) {
       return;

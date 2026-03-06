@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/achievement.dart';
 import '../models/app_state.dart';
 import '../models/app_theme_option.dart';
 import '../models/detection_focus_option.dart';
@@ -24,6 +25,8 @@ final appStateProvider = StateNotifierProvider<AppStateNotifier, AppState>((
 /// - Theme-Wechsel
 /// - Quest-Ergebnisse verarbeiten
 /// - Level/XP/Streak berechnen
+/// - Achievement freischalten (Object Scan + Milestones)
+/// - Detection History synchronisieren
 class AppStateNotifier extends StateNotifier<AppState> {
   /// Erstellt einen neuen AppStateNotifier mit Initial-State.
   AppStateNotifier() : super(AppState.initial());
@@ -102,6 +105,9 @@ class AppStateNotifier extends StateNotifier<AppState> {
         lastCompletedDate: lastCompletedDate,
       ),
     );
+
+    // Check Milestone-Achievements nach Progress-Update
+    _checkMilestoneAchievements();
   }
 
   /// Verarbeitet einen neuen Quest-Erfolg (Objekterkennung).
@@ -147,6 +153,9 @@ class AppStateNotifier extends StateNotifier<AppState> {
       ),
       logEntries: updatedEntries,
     );
+
+    // Check und unlock Milestone-Achievements
+    _checkMilestoneAchievements();
 
     // Sende Scan asynchron zum Backend
     _sendDetectionLogToServer(label, normalizedConfidence);
@@ -273,5 +282,56 @@ class AppStateNotifier extends StateNotifier<AppState> {
       return state.progress.streak + 1;
     }
     return 1;
+  }
+
+  /// Prüft und entsperrt Milestone-Achievements basierend auf aktuellem Progress.
+  ///
+  /// Wird nach jedem Scan (addQuestResult) und Progress-Update (setProgress) aufgerufen.
+  /// Checkt automatisch:
+  /// - scanner_master: 100+ Scans
+  /// - level_10: Level 10 erreicht
+  /// - streak_champion: 7+ Tage Streak
+  /// - xp_collector: 1000+ XP
+  /// - completionist: Alle anderen Achievements freigeschaltet
+  void _checkMilestoneAchievements() {
+    final progress = state.progress;
+    final totalScans = state.logEntries.length;
+    final unlocked = state.unlockedAchievements;
+
+    // Scanner-Meister: 100+ Scans
+    if (totalScans >= 100 && !unlocked.contains('scanner_master')) {
+      unlockAchievement('scanner_master');
+    }
+
+    // Level 10
+    if (progress.level >= 10 && !unlocked.contains('level_10')) {
+      unlockAchievement('level_10');
+    }
+
+    // Streak-Champion: 7+ Tage
+    if (progress.streak >= 7 && !unlocked.contains('streak_champion')) {
+      unlockAchievement('streak_champion');
+    }
+
+    // XP-Sammler: 1000+ XP
+    if (progress.totalXp >= 1000 && !unlocked.contains('xp_collector')) {
+      unlockAchievement('xp_collector');
+    }
+
+    // Completionist: Alle anderen Achievements freigeschaltet
+    // (Zählt nur object_scan und milestone achievements, nicht meta)
+    final nonMetaAchievements = allAchievements
+        .where((a) => a.type != AchievementType.meta)
+        .map((a) => a.id)
+        .toList();
+
+    final unlockedNonMeta = unlocked
+        .where((id) => nonMetaAchievements.contains(id))
+        .length;
+
+    if (unlockedNonMeta >= nonMetaAchievements.length &&
+        !unlocked.contains('completionist')) {
+      unlockAchievement('completionist');
+    }
   }
 }

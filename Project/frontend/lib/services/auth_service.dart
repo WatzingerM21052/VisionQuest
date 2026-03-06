@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 
+/// Exception die bei Authentifizierungs-Fehlern geworfen wird.
 class AuthException implements Exception {
   final String message;
   final String? code;
@@ -14,6 +15,7 @@ class AuthException implements Exception {
   String toString() => code == null ? message : '$code: $message';
 }
 
+/// Response-Objekt für Auth-Anfragen (Login/Register).
 class AuthResponse {
   final bool success;
   final String message;
@@ -54,6 +56,9 @@ class AuthResponse {
   }
 }
 
+/// Abstrakte Schnittstelle für Token-Speicherung.
+///
+/// Erlaubt verschiedene Implementierungen (Secure Storage, In-Memory, etc.)
 abstract class TokenStorage {
   Future<String?> readToken();
   Future<void> writeToken(String token);

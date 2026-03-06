@@ -4,6 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/achievement.dart';
 import '../providers/app_state_provider.dart';
 
+/// Zeigt eine \u00dcbersicht aller Achievements (freigeschaltet und gesperrt).
+///
+/// Achievements werden nach Type gruppiert:
+/// - Object Scan: Erkenne bestimmte Objekte
+/// - Milestone: Erreiche Level/XP/Streak Ziele
+/// - Meta: Spezielle Achievements (z.B. Completionist)
 class AchievementsScreen extends ConsumerWidget {
   const AchievementsScreen({super.key});
 
@@ -34,7 +40,7 @@ class AchievementsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sammle Achievements indem du verschiedene Objekte erkennst',
+                    'Scanne Objekte, erreiche Milestones und schalte alle Achievements frei!',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

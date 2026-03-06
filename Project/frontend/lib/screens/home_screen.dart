@@ -23,6 +23,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
   }
 
+  /// Behandelt den Logout-Prozess.
+  ///
+  /// Entfernt den Token, cleant den AppState und navigiert zum Login.
   Future<void> _handleLogout() async {
     setState(() {
       _isLoading = true;
@@ -551,6 +554,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  /// Gibt die Daily Quest für ein bestimmtes Datum zurück.
+  ///
+  /// LEGACY: Diese Funktion wird noch für Home Screen Stats verwendet.
+  /// Sollte langfristig durch Scanner Quest System ersetzt werden.
   _DailyQuest _questForDate(DateTime date) {
     const quests = <_DailyQuest>[
       _DailyQuest(
@@ -607,6 +614,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return quests[dayKey];
   }
 
+  /// Zählt wie viele Quest-Objekte in den Entries gefunden wurden.
+  ///
+  /// LEGACY: Teil des alten Daily Quest Systems.
   int _countQuestMatches(List<QuestLogEntry> entries, _DailyQuest quest) {
     var matches = 0;
     for (final entry in entries) {
@@ -621,6 +631,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return matches;
   }
 
+  /// Erstellt eine Stat-Card mit Icon, Wert und Label.
   Widget _buildStatCard(
     ThemeData theme,
     ColorScheme colorScheme, {

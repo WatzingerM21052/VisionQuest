@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/achievement.dart';
+import '../models/app_state.dart';
 import '../providers/app_state_provider.dart';
 
 /// Zeigt eine \u00dcbersicht aller Achievements (freigeschaltet und gesperrt).
@@ -17,9 +18,15 @@ class AchievementsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final unlockedAchievements = ref.watch(
-      appStateProvider.select((state) => state.unlockedAchievements),
-    );
+    final appState = ref.watch(appStateProvider);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final crossAxisCount = screenWidth >= 1100
+        ? 4
+        : (screenWidth >= 760 ? 3 : 2);
+    final childAspectRatio = screenWidth < 420
+        ? 0.68
+        : (screenWidth < 760 ? 0.74 : 0.86);
+    final unlockedAchievements = appState.unlockedAchievements;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Achievements'), elevation: 0),
@@ -53,20 +60,27 @@ class AchievementsScreen extends ConsumerWidget {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.85,
+                  childAspectRatio: childAspectRatio,
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final achievement = allAchievements[index];
                   final isUnlocked = unlockedAchievements.contains(
                     achievement.id,
                   );
+                  final progressCount = _calculateProgress(
+                    achievement: achievement,
+                    unlockedAchievements: unlockedAchievements,
+                    appState: appState,
+                  );
+
                   return _AchievementCard(
                     achievement: achievement,
                     isUnlocked: isUnlocked,
+                    progressCount: progressCount,
                     theme: theme,
                     colorScheme: colorScheme,
                   );
@@ -79,17 +93,63 @@ class AchievementsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  int _calculateProgress({
+    required Achievement achievement,
+    required List<String> unlockedAchievements,
+    required AppState appState,
+  }) {
+    switch (achievement.type) {
+      case AchievementType.objectScan:
+        final label = achievement.objectLabel?.toLowerCase();
+        if (label == null) {
+          return 0;
+        }
+        return appState.logEntries
+            .where((entry) => entry.label.toLowerCase() == label)
+            .length;
+
+      case AchievementType.milestone:
+        switch (achievement.id) {
+          case 'scanner_master':
+            return appState.logEntries.length;
+          case 'level_10':
+            return appState.progress.level;
+          case 'streak_champion':
+            return appState.progress.streak;
+          case 'xp_collector':
+            return appState.progress.totalXp;
+          default:
+            return 0;
+        }
+
+      case AchievementType.meta:
+        final nonMetaCount = allAchievements
+            .where((a) => a.type != AchievementType.meta)
+            .length;
+        final unlockedNonMeta = unlockedAchievements
+            .where(
+              (id) => allAchievements
+                  .where((a) => a.type != AchievementType.meta)
+                  .any((a) => a.id == id),
+            )
+            .length;
+        return unlockedNonMeta.clamp(0, nonMetaCount);
+    }
+  }
 }
 
 class _AchievementCard extends StatelessWidget {
   final Achievement achievement;
   final bool isUnlocked;
+  final int progressCount;
   final ThemeData theme;
   final ColorScheme colorScheme;
 
   const _AchievementCard({
     required this.achievement,
     required this.isUnlocked,
+    required this.progressCount,
     required this.theme,
     required this.colorScheme,
   });
@@ -128,7 +188,7 @@ class _AchievementCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               // Icon und Status
               Stack(
@@ -178,35 +238,31 @@ class _AchievementCard extends StatelessWidget {
               const SizedBox(height: 4),
 
               // Beschreibung
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      achievement.description,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: isUnlocked
-                            ? colorScheme.onSurfaceVariant
-                            : Colors.grey,
-                        fontSize: 11,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (!isUnlocked) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        '0/${achievement.targetCount}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: Colors.grey,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ],
+              Flexible(
+                child: Text(
+                  achievement.description,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: isUnlocked
+                        ? colorScheme.onSurfaceVariant
+                        : Colors.grey,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (!isUnlocked) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${progressCount.clamp(0, achievement.targetCount)}/${achievement.targetCount}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.grey,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
               const SizedBox(height: 6),
 
               // Unlock Status

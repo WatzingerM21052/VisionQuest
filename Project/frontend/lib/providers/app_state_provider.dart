@@ -6,6 +6,7 @@ import '../models/detection_focus_option.dart';
 import '../models/detection_model_option.dart';
 import '../models/quest_log_entry.dart';
 import '../models/quest_progress.dart';
+import '../services/quest_log_storage_service.dart';
 
 /// Globaler Riverpod Provider für [AppState] State Management.
 ///
@@ -62,6 +63,17 @@ class AppStateNotifier extends StateNotifier<AppState> {
     state = state.copyWith(userRole: role);
   }
 
+  /// Lädt gespeicherte Quest-Log-Einträge aus lokalem Storage.
+  ///
+  /// Sollte beim App-Start aufgerufen werden, um die Detection-Historie
+  /// wiederherzustellen.
+  Future<void> loadStoredEntries() async {
+    final entries = await QuestLogStorageService.loadEntries();
+    if (entries.isNotEmpty) {
+      state = state.copyWith(logEntries: entries);
+    }
+  }
+
   /// Aktualisiert den Fortschritt (XP/Level/Streak), z.B. nach Server-Sync.
   void setProgress({
     required int totalXp,
@@ -86,6 +98,7 @@ class AppStateNotifier extends StateNotifier<AppState> {
   /// 2. Berechnet XP basierend auf Genauigkeit (10-100 XP)
   /// 3. Aktualisiert Level und Streak
   /// 4. Speichert Eintrag im Quest-Log (maximal 200 Einträge)
+  /// 5. Persistiert die Einträge in lokalem Storage
   ///
   /// Parameter:
   ///   - [label]: Name des erkannten Objekts
@@ -107,6 +120,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
       timestamp: now,
     );
 
+    final updatedEntries = [
+      newEntry,
+      ...state.logEntries,
+    ].take(_maxLogEntries).toList();
+
     state = state.copyWith(
       progress: QuestProgress(
         totalXp: updatedXp,
@@ -114,8 +132,11 @@ class AppStateNotifier extends StateNotifier<AppState> {
         streak: updatedStreak,
         lastCompletedDate: now,
       ),
-      logEntries: [newEntry, ...state.logEntries].take(_maxLogEntries).toList(),
+      logEntries: updatedEntries,
     );
+
+    // Persistiere Einträge in lokalem Storage
+    QuestLogStorageService.saveEntries(updatedEntries);
   }
 
   int _xpFromConfidence(double confidence) {

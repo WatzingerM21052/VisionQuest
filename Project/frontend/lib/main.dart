@@ -16,9 +16,22 @@ import 'theme/app_themes.dart';
 
 /// Entry Point der VisionQuest-Applikation.
 ///
-/// Initialisiert Riverpod Provider und startet die App als [VisionQuestApp].
-void main() {
-  runApp(const ProviderScope(child: VisionQuestApp()));
+/// Initialisiert Riverpod Provider, lädt gespeicherte Quest-Log-Einträge
+/// und startet die App als [VisionQuestApp].
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final container = ProviderContainer();
+
+  // Lade gespeicherte Quest-Log-Einträge aus lokalem Storage
+  await container.read(appStateProvider.notifier).loadStoredEntries();
+
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const VisionQuestApp(),
+    ),
+  );
 }
 
 /// Root-Widget der VisionQuest-Applikation.

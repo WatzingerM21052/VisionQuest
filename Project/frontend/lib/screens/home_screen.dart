@@ -90,13 +90,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Stats berechnen
     final totalScanned = todayEntries.length; // Heutige Scans
-    final totalFound = logEntries
-        .where((entry) => _isQuestTarget(entry.label))
-        .length; // ALLE Scans die zu Quests passen
     final foundToday = _countQuestMatches(
       todayEntries,
       dailyQuest,
     ); // Heutige Quest-Matches
+    final totalFound = foundToday; // Nur heutige Daily-Quest Objekte
     final dailyTarget = dailyQuest.requiredCount;
     final questCompleted = foundToday >= dailyTarget;
 

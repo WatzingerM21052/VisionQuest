@@ -85,9 +85,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             .setProgress(totalXp: totalXp, level: level, streak: streak);
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result.message)));
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on AuthException catch (error) {
       setState(() {

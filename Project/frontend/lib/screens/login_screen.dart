@@ -97,9 +97,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             );
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result.message)));
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on AuthException catch (error) {
       setState(() {

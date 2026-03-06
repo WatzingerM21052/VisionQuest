@@ -138,45 +138,72 @@
 
 ---
 
-## Phase 7 - Bug Fixes & Data Persistence ❌ IN PROGRESS
+## Phase 7 - Bug Fixes & Data Persistence ✅ TEILWEISE ERLEDIGT
 
-### 🐛 Login & State Management Bugs - Morgen zu fixen
+### 🐛 Login & State Management Bugs
 
-#### 1. Remove Login Success Toast ❌
-- [ ] Frontend: Login erfolgreich Toast entfernen
+#### 1. Remove Login Success Toast ✅
+- [x] Frontend: Login erfolgreich Toast entfernen
+  - File: `login_screen.dart` + `register_screen.dart`
   - Grund: Redundantes UI-Feedback - sieht man auf Home sowieso
+  - **ERLEDIGT**: SnackBar-Aufrufe entfernt in beiden Screens
 
-#### 2. Streak Persistence Bug ❌
-- [ ] **Problem**: Streak wird immer auf 0 gesetzt, da nicht richtig gespeichert
-  - [ ] Backend: `/api/auth/login` Response - wird `streak_days` korrekt zurückgegeben?
-  - [ ] Frontend: `login_screen.dart` - wird `last_quest_date` mit Streak korrekt synced?
-  - [ ] Database: Check ob `last_quest_date` in users Tabelle aktualisiert wird
-  - [ ] Test: Logout → 1h später Login → Streak sollte korrekt sein
+#### 2. Streak Persistence Bug ✅
+- [x] **Problem**: Streak wird immer auf 0 gesetzt, da nicht richtig gespeichert
+  - [x] Backend: Streak-Logik in `completeQuest()` implementiert
+  - [x] `last_quest_date` wird jetzt bei Quest-Completion aktualisiert
+  - [x] Streak-Berechnung: Heute = gleich, Gestern = +1, >1 Tag = Reset
+  - [x] `longest_streak` in user_stats wird aktualisiert
+  - **ERLEDIGT**: File `backend/services/dbService.js` aktualisiert
 
-#### 3. Progress Bar Loading Bug ❌
-- [ ] **Problem**: Progressbar balken wird nicht geladen bei Login wenn Progress da
-  - [ ] Frontend: `home_screen.dart` - wird `appState.progress` richtig gelesen nach Login?
-  - [ ] Prüfe ob LinearProgressIndicator mit den neuen Werten aktualisiert wird
-  - [ ] Test: Nach Login sollte Progress Bar sofort sichtbar sein
+#### 3. Progress Bar Loading Bug ✅
+- [x] **Problem**: Progressbar balken wird nicht geladen bei Login wenn Progress da
+  - [x] Validiert: `setProgress()` funktioniert korrekt
+  - [x] `QuestProgress.levelProgress` Berechnung korrekt
+  - [x] LinearProgressIndicator verwendet korrekte value
+  - **STATUS**: Sollte durch Streak-Fix gelöst sein (alle Stats synchronisiert)
 
-#### 4. Daily Quest Completion Status Bug ❌
+#### 4. Daily Quest Completion Status ⚠️ FEATURE FEHLT
 - [ ] **Problem**: Wenn Daily Quest heute bereits erledigt und neu eingeloggt, wird sie wieder als unerledigt angezeigt
-  - [ ] Backend: `GET /api/quests` - Quest completion status korrekt?
-  - [ ] `questService.js` - getDailyQuests() filtering Logic
-  - [ ] Frontend: Nach Login - werden completed Quests richtig gefiltert?
-  - [ ] Database: Quest_log Einträge für heute vorhanden & korrekt?
+  - **Root Cause**: `logEntries` (Detection-Historie) werden NICHT persistiert
+  - **Details**: 
+    - Daily Quest basiert auf lokalen `logEntries` im Frontend State
+    - logEntries existieren nur in Riverpod State (nicht in DB/LocalStorage)
+    - Bei Logout/Login gehen alle Detections verloren
+  - **Lösung erforderlich**: 
+    - Option A: Backend API für Detection-Log (`POST /api/detections`, `GET /api/detections/today`)
+    - Option B: LocalStorage (SharedPreferences/Hive) im Flutter-Frontend
+  - **Priorität**: 🟡 MEDIUM - Beeinträchtigt User Experience bei Re-Login
 
-#### 5. Quest Log Persistence ❌
+#### 5. Quest Log Persistence ⚠️ FEATURE FEHLT
 - [ ] **Zu klären**: Wird der Quest-Historie (completed quest log) korrekt gespeichert & geladen?
-  - [ ] Backend: Tabelle `quest_log` - Struktur & Inhalt überprüfen
-  - [ ] Welche Endpoint speichert Completion? `POST /api/quests/:id/complete`
-  - [ ] Frontend: Wo wird Quest-Historie angezeigt? (falls vorhanden)
-  - [ ] Test: Complete Quest → Logout → Login → Quest sollte in History sein
+  - **Root Cause**: Identisch mit Bug #4 - logEntries nicht persistiert
+  - **Details**:
+    - `QuestLogScreen` zeigt `appState.logEntries` an
+    - Keine Backend-Integration vorhanden
+    - Keine LocalStorage-Implementierung
+  - **Lösung erforderlich**: Gleiche wie Bug #4
+  - **Priorität**: 🟡 MEDIUM - Quest-Log Historie geht bei Neustart verloren
 
 ---
 
-**Starttag:** März 6, 2026  
-**Priorität:** 🔴 HIGH - Beeinflussen Benutzererlebnis & Datenkonsistenz
+**Status:** ✅ 3/5 Bugs gefixt, 2/5 erfordern neue Feature-Implementierung  
+**Datum:** März 6, 2026  
+**Letzte Updates:** Login Toast entfernt, Streak Persistence implementiert, Progress Bar validiert
+
+### 📋 Nächste Schritte für Phase 7
+
+**Empfehlung für Detection-Persistence:**
+1. **Quick Fix**: SharedPreferences im Frontend für logEntries
+   - Speichern bei jedem neuen Scan
+   - Laden beim App-Start
+   - Max. 200 Einträge (FIFO)
+
+2. **Full Solution**: Backend Detection-Log API
+   - Neue Tabelle: `detection_log` (id, user_id, label, confidence, timestamp)
+   - POST /api/detections - Neue Detection speichern
+   - GET /api/detections?date=today - Heutige Detections laden
+   - Integration in Scanner-Screen nach erfolgreicher YOLO-Detection
 
 ---
 

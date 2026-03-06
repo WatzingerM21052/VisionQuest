@@ -389,25 +389,56 @@ const completeQuest = (questId, userId, detectedObject = null) => {
             const newXP = user.xp + quest.xp_reward;
             const newLevel = Math.floor(newXP / 1000) + 1; // Alle 1000 XP = 1 Level
 
+            // Streak-Logik: Prüfen ob Quest heute oder gestern completed wurde
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let newStreak = user.streak_days || 0;
+
+            if (user.last_quest_date) {
+                const lastQuestDate = new Date(user.last_quest_date);
+                lastQuestDate.setHours(0, 0, 0, 0);
+
+                const daysDiff = Math.floor((today - lastQuestDate) / (1000 * 60 * 60 * 24));
+
+                if (daysDiff === 0) {
+                    // Heute schon eine Quest gemacht - Streak bleibt gleich
+                    newStreak = user.streak_days || 1;
+                } else if (daysDiff === 1) {
+                    // Gestern Quest gemacht - Streak erhöhen
+                    newStreak = (user.streak_days || 0) + 1;
+                } else {
+                    // Mehr als 1 Tag her - Streak zurücksetzen
+                    newStreak = 1;
+                }
+            } else {
+                // Erste Quest überhaupt
+                newStreak = 1;
+            }
+
             await updateUser(userId, {
                 xp: newXP,
-                level: newLevel
+                level: newLevel,
+                streak_days: newStreak,
+                last_quest_date: new Date().toISOString()
             });
 
             // Stats updaten
             const statsSql = `
                 UPDATE user_stats 
                 SET total_quests_completed = total_quests_completed + 1,
+                    longest_streak = MAX(longest_streak, ?),
                     updated_at = CURRENT_TIMESTAMP
                 WHERE user_id = ?
             `;
-            db.run(statsSql, [userId]);
+            db.run(statsSql, [newStreak, userId]);
 
             resolve({
                 message: 'Quest abgeschlossen!',
                 xp_earned: quest.xp_reward,
                 new_xp: newXP,
-                new_level: newLevel
+                new_level: newLevel,
+                streak: newStreak
             });
 
         } catch (error) {

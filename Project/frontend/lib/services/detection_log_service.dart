@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/quest_log_entry.dart';
 
+/// Exception die bei Detection-Log API-Fehlern geworfen wird.
+///
+/// Enthält eine Fehlermeldung und optional einen Error-Code vom Backend.
 class DetectionLogException implements Exception {
   final String message;
   final String? code;
@@ -14,12 +17,27 @@ class DetectionLogException implements Exception {
   String toString() => code == null ? message : '$code: $message';
 }
 
+/// Service für Detection-Log Verwaltung.
+///
+/// Kommuniziert mit dem Backend `/api/detection-log` Endpoint.
+/// Features:
+/// - Scan-Results speichern (logDetection)
+/// - History laden (getDetectionHistory, getTodayDetections)
+/// - Stats abrufen (getDetectionStats)
+/// - Logs löschen (deleteDetection, deleteDetectionHistory)
 class DetectionLogService {
   static const String _baseUrl = ApiConfig.baseUrl;
   static const String _secureStorage = 'auth_token';
   final _storage = const FlutterSecureStorage();
 
-  /// Speichert einen neuen Detection Scan auf dem Server
+  /// Speichert einen neuen Detection Scan auf dem Server.
+  ///
+  /// POST /api/detection-log mit JSON Body:
+  /// ```json
+  /// {"label": "book", "confidence": 0.95}
+  /// ```
+  ///
+  /// Throws [DetectionLogException] bei Netzwerk- oder Auth-Fehlern.
   Future<void> logDetection(String label, double confidence) async {
     try {
       final token = await _getToken();
@@ -54,7 +72,12 @@ class DetectionLogService {
     }
   }
 
-  /// Holt die komplette Detection History des Users
+  /// Holt die komplette Detection History des Users.
+  ///
+  /// GET /api/detection-log?days=7 (optional)
+  /// Gibt Liste von QuestLogEntry zurück.
+  ///
+  /// Throws [DetectionLogException] bei Netzwerk- oder Auth-Fehlern.
   Future<List<QuestLogEntry>> getDetectionHistory({int? daysBack}) async {
     try {
       final token = await _getToken();
@@ -107,7 +130,12 @@ class DetectionLogService {
     }
   }
 
-  /// Holt nur die heutigen Detections
+  /// Holt nur die heutigen Detections.
+  ///
+  /// GET /api/detection-log/today
+  /// Gibt Liste von QuestLogEntry zurück (nur heute).
+  ///
+  /// Throws [DetectionLogException] bei Netzwerk- oder Auth-Fehlern.
   Future<List<QuestLogEntry>> getTodayDetections() async {
     try {
       final token = await _getToken();
@@ -157,7 +185,12 @@ class DetectionLogService {
     }
   }
 
-  /// Holt Stats für Detections
+  /// Holt Statistiken für alle Detections.
+  ///
+  /// GET /api/detection-log/stats
+  /// Gibt DetectionStats Objekt zurück.
+  ///
+  /// Throws [DetectionLogException] bei Netzwerk- oder Auth-Fehlern.
   Future<DetectionStats> getDetectionStats() async {
     try {
       final token = await _getToken();
@@ -191,7 +224,12 @@ class DetectionLogService {
     }
   }
 
-  /// Löscht die komplette Detection History (GDPR)
+  /// Löscht die komplette Detection History (GDPR).
+  ///
+  /// DELETE /api/detection-log
+  /// Entfernt alle Scan-Logs des Users (für GDPR-Compliance).
+  ///
+  /// Throws [DetectionLogException] bei Netzwerk- oder Auth-Fehlern.
   Future<void> deleteDetectionHistory() async {
     try {
       final token = await _getToken();
@@ -222,12 +260,19 @@ class DetectionLogService {
     }
   }
 
-  /// Holt den gespeicherten Auth-Token
+  /// Holt den gespeicherten Auth-Token aus SecureStorage.
+  ///
+  /// Gibt `null` zurück wenn kein Token vorhanden.
   Future<String?> getStoredToken() async {
     return await _getToken();
   }
 
-  /// Löscht einen einzelnen Detection Log Eintrag
+  /// Löscht einen einzelnen Detection Log Eintrag.
+  ///
+  /// DELETE /api/detection-log?label=book&timestamp=2024-01-01T12:00:00
+  /// Entfernt einen spezifischen Scan aus der History.
+  ///
+  /// Throws [DetectionLogException] bei Netzwerk- oder Auth-Fehlern.
   Future<void> deleteDetection(String label, DateTime timestamp) async {
     try {
       final token = await _getToken();
@@ -260,7 +305,14 @@ class DetectionLogService {
     }
   }
 
-  /// Speichert die entsperrten Achievements im Backend
+  /// Speichert die entsperrten Achievements im Backend.
+  ///
+  /// POST /api/achievements mit JSON Body:
+  /// ```json
+  /// {"unlockedAchievements": ["phone_finder", "book_lover", ...]}
+  /// ```
+  ///
+  /// Throws [DetectionLogException] bei Netzwerk- oder Auth-Fehlern.
   Future<void> saveAchievements(List<String> unlockedAchievementIds) async {
     try {
       final token = await _getToken();
@@ -295,7 +347,12 @@ class DetectionLogService {
     }
   }
 
-  /// Lädt die entsperrten Achievements vom Backend
+  /// Lädt die entsperrten Achievements vom Backend.
+  ///
+  /// GET /api/achievements
+  /// Gibt Liste der Achievement-IDs zurück (z.B. ["phone_finder", "book_lover"]).
+  ///
+  /// Throws [DetectionLogException] bei Netzwerk- oder Auth-Fehlern.
   Future<List<String>> loadAchievements() async {
     try {
       final token = await _getToken();
@@ -332,13 +389,22 @@ class DetectionLogService {
     }
   }
 
-  /// Holt den Token aus dem SecureStorage
+  /// Holt den JWT-Token aus dem FlutterSecureStorage.
+  ///
+  /// Private Helper-Methode für alle API-Calls.
+  /// Gibt `null` zurück wenn kein Token vorhanden.
   Future<String?> _getToken() async {
     return await _storage.read(key: _secureStorage);
   }
 }
 
-/// Stats Modell für Detection Log
+/// Stats-Modell für Detection-Log Statistiken.
+///
+/// Enthält:
+/// - `todayScans`: Anzahl Scans heute
+/// - `allTimeScans`: Gesamt-Anzahl Scans
+/// - `uniqueObjectsFound`: Verschiedene Objekt-Typen gescannt
+/// - `lastScanTime`: Zeitpunkt des letzten Scans (ISO 8601 String)
 class DetectionStats {
   final int todayScans;
   final int allTimeScans;

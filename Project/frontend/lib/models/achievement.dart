@@ -1,5 +1,14 @@
-/// Modell für Achievements
+/// Repräsentiert ein Achievement im VisionQuest Spiel.
+///
+/// Achievements werden durch verschiedene Aktionen freigeschaltet:
+/// - [AchievementType.objectScan]: Erkenne bestimmte Objekte X-mal
+/// - [AchievementType.milestone]: Erreiche spielinterne Meilensteine (Level, XP, Streak)
+/// - [AchievementType.meta]: Meta-Achievements (z.B. alle anderen freischalten)
 class Achievement {
+  /// Erstellt ein neues Achievement.
+  ///
+  /// [id] ist der eindeutige Identifier (z.B. 'phone_finder')
+  /// [objectLabel] ist nur bei [AchievementType.objectScan] erforderlich
   Achievement({
     required this.id,
     required this.title,
@@ -13,17 +22,38 @@ class Achievement {
     this.unlockedDate,
   });
 
+  /// Eindeutige ID des Achievements (wird im Backend gespeichert)
   final String id;
+
+  /// Anzeigename des Achievements
   final String title;
+
+  /// Beschreibung was zu tun ist
   final String description;
-  final String? objectLabel; // Optional: nur für OBJECT_SCAN
+
+  /// Label des zu erkennenden Objekts (nur bei objectScan-Type)
+  final String? objectLabel;
+
+  /// Emoji-Icon zur Darstellung
   final String icon;
+
+  /// Seltenheit bestimmt die Sterne-Anzeige
   final AchievementRarity rarity;
+
+  /// Anzahl der benötigten Scans/Level/XP für Freischaltung
   final int targetCount;
+
+  /// Type bestimmt wie das Achievement freigeschaltet wird
   final AchievementType type;
+
+  /// Gibt an ob das Achievement bereits freigeschaltet wurde
   bool isUnlocked;
+
+  /// Zeitpunkt der Freischaltung (null wenn noch gesperrt)
+  /// Zeitpunkt der Freischaltung (null wenn noch gesperrt)
   DateTime? unlockedDate;
 
+  /// Erstellt eine Kopie mit optional geänderten Werten.
   Achievement copyWith({
     String? id,
     String? title,
@@ -51,17 +81,33 @@ class Achievement {
   }
 }
 
+/// Definiert die Art wie ein Achievement freigeschaltet wird.
 enum AchievementType {
-  objectScan, // Scanne X von Objekt Y
-  milestone, // Erreiche Level/XP/Streak
-  meta, // Spezielle/Alle Achievements
+  /// Erkenne ein bestimmtes Objekt X-mal (z.B. "5 Handys scannen")
+  objectScan,
+
+  /// Erreiche einen Spielfortschritt (Level, XP, Streak)
+  milestone,
+
+  /// Meta-Achievement (z.B. "Alle anderen Achievements freischalten")
+  meta,
 }
 
+/// Bestimmt die Seltenheit und Sternanzahl eines Achievements.
 enum AchievementRarity {
+  /// Häufig - 1 Stern
   common('Häufig', '⭐'),
+
+  /// Selten - 2 Sterne
   uncommon('Selten', '⭐⭐'),
+
+  /// Sehr Selten - 3 Sterne
   rare('Sehr Selten', '⭐⭐⭐'),
+
+  /// Episch - 4 Sterne
   epic('Episch', '⭐⭐⭐⭐'),
+
+  /// Legendär - 5 Sterne
   legendary('Legendär', '⭐⭐⭐⭐⭐');
 
   const AchievementRarity(this.displayName, this.stars);
@@ -70,9 +116,17 @@ enum AchievementRarity {
   final String stars;
 }
 
-/// Vordefinierte Achievements
+/// Globale Liste aller verfügbaren Achievements in VisionQuest.
+///
+/// Strukturiert in drei Kategorien:
+/// 1. **Object Scan** (10 Achievements) - Erkenne bestimmte Objekte
+/// 2. **Milestone** (4 Achievements) - Erreiche Spielfortschritte
+/// 3. **Meta** (1 Achievement) - Completionist-Achievement
+///
+/// Insgesamt: 15 Achievements
 final allAchievements = [
-  // Object Scan Achievements
+  // ========== OBJECT SCAN ACHIEVEMENTS (10) ==========
+  // Diese Achievements werden im Scanner als Quests angezeigt
   Achievement(
     id: 'phone_finder',
     title: 'Handy-Finder',
@@ -174,7 +228,8 @@ final allAchievements = [
     type: AchievementType.objectScan,
   ),
 
-  // Milestone Achievements
+  // ========== MILESTONE ACHIEVEMENTS (4) ==========
+  // Diese werden automatisch bei Erreichen des Ziels freigeschaltet
   Achievement(
     id: 'scanner_master',
     title: 'Scanner-Meister',
@@ -212,7 +267,8 @@ final allAchievements = [
     type: AchievementType.milestone,
   ),
 
-  // Meta Achievements
+  // ========== META ACHIEVEMENT (1) ==========
+  // Wird freigeschaltet wenn alle anderen (14) freigeschaltet sind
   Achievement(
     id: 'completionist',
     title: 'Perfektionist',

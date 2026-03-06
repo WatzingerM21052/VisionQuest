@@ -7,6 +7,14 @@ import '../models/detection_focus_option.dart';
 import '../models/detection_model_option.dart';
 import '../providers/app_state_provider.dart';
 
+/// Einstellungen-Bildschirm für App-Konfiguration.
+///
+/// Erlaubt Anpassung von:
+/// - Theme (Light/Dark/System)
+/// - Detection Model (YOLO/etc.)
+/// - Detection Focus (Balanced/Precision/Speed)
+/// - Benachrichtigungen und Sound (TODO: noch nicht implementiert)
+/// - Admin Panel (nur für Admin-User sichtbar)
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -15,6 +23,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  // TODO: Diese Settings sind aktuell nur UI - keine Funktionalität
   bool _notifications = true;
   bool _sound = true;
 

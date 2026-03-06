@@ -1,5 +1,10 @@
+/// Verfügbare Detection-Focus Modi für Object-Recognition.
+///
+/// - [strict]: Strenger Modus (höhere Confidence-Schwelle)
+/// - [balanced]: Ausgeglichener Modus (Standard-Schwelle)
 enum DetectionFocusOption { strict, balanced }
 
+/// Extension für [DetectionFocusOption] zur Anzeige von Focus-Namen.
 extension DetectionFocusOptionLabel on DetectionFocusOption {
   String get label {
     switch (this) {

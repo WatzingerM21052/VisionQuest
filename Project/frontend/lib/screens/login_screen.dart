@@ -5,6 +5,13 @@ import '../app_routes.dart';
 import '../providers/app_state_provider.dart';
 import '../services/auth_service.dart';
 
+/// Login-Bildschirm für User-Authentifizierung.
+///
+/// Unterstützt Login via:
+/// - Email + Passwort
+/// - Username + Passwort
+///
+/// Nach erfolgreichem Login wird JWT-Token gespeichert und User zum Home-Screen navigiert.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 

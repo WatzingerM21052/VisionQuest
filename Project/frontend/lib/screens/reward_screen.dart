@@ -6,9 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_state_provider.dart';
 import '../services/vision_service.dart';
 
+/// Zeigt das Ergebnis einer Objekterkennung mit Animation und XP-Belohnung.
+///
+/// Flow:
+/// 1. Analyse-Phase (1.4s) - Zeigt "Analysiere..." Overlay
+/// 2. Ergebnis-Phase - Zeigt erkanntes Objekt, Confidence%, XP-Belohnung
+/// 3. XP wird dem AppState hinzugefügt (einmalig)
+/// 4. Bounce-Animation für visuelles Feedback
 class RewardScreen extends ConsumerStatefulWidget {
   const RewardScreen({super.key, required this.result});
 
+  /// Das Erkennungs-Ergebnis vom Backend (Label + Confidence).
   final VisionResult result;
 
   @override
@@ -17,11 +25,16 @@ class RewardScreen extends ConsumerStatefulWidget {
 
 class _RewardScreenState extends ConsumerState<RewardScreen>
     with SingleTickerProviderStateMixin {
+  /// Zeigt an ob die Analyse-Phase noch läuft.
   bool _isAnalyzing = true;
+
+  /// Flag um doppelte XP-Vergabe zu verhindern.
   bool _questResultStored = false;
+
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
 
+  /// Berechnet die XP-Belohnung basierend auf Confidence (10-100 XP).
   int get _xpReward {
     final value = (widget.result.confidence * 100).round();
     if (value < 10) return 10;

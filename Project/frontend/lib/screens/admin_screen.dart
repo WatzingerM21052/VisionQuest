@@ -5,6 +5,15 @@ import '../providers/app_state_provider.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
 
+/// Admin-Panel für User- und System-Verwaltung.
+///
+/// Nur für User mit Role "admin" zugänglich.
+/// Features:
+/// - User-Liste mit Suche und Filter
+/// - User bearbeiten (username, email, role, level, xp)
+/// - User löschen
+/// - Server-Stats (User-Anzahl, Detection-Anzahl, etc.)
+/// - Admin-Logs (Audit-Trail für Admin-Aktionen)
 class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
 

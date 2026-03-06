@@ -5,6 +5,15 @@ import '../app_routes.dart';
 import '../providers/app_state_provider.dart';
 import '../services/auth_service.dart';
 
+/// Registrierungs-Bildschirm für neue User.
+///
+/// Formular mit:
+/// - Username (3+ Zeichen)
+/// - Email (gültige Email-Adresse)
+/// - Passwort (8+ Zeichen)
+/// - Passwort bestätigen (muss übereinstimmen)
+///
+/// Nach erfolgreicher Registrierung wird JWT-Token gespeichert und User zum Home-Screen navigiert.
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 

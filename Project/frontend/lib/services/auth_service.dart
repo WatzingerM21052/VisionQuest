@@ -142,6 +142,15 @@ class SecureTokenStorage implements TokenStorage {
   }
 }
 
+/// Service für Authentifizierung und User-Management.
+///
+/// Kommuniziert mit dem Backend `/api/auth` Endpoint.
+/// Features:
+/// - User Registration (register)
+/// - Login mit Email/Username (login)
+/// - Token Refresh (refreshToken)
+/// - Logout mit Token-Löschung (logout)
+/// - Sichere Token-Speicherung via FlutterSecureStorage
 class AuthService {
   AuthService({
     this.baseUrl = ApiConfig.baseUrl,
@@ -157,6 +166,16 @@ class AuthService {
   // Public getter für Token Storage (für Admin-Screen etc.)
   TokenStorage get storage => _storage;
 
+  /// Registriert einen neuen User.
+  ///
+  /// POST /api/auth/register mit JSON Body:
+  /// ```json
+  /// {"username": "user", "email": "user@example.com", "password": "secret"}
+  /// ```
+  ///
+  /// Token wird automatisch im SecureStorage gespeichert.
+  ///
+  /// Throws [AuthException] bei Validierungs- oder Server-Fehlern.
   Future<AuthResponse> register({
     required String username,
     required String email,
@@ -175,6 +194,20 @@ class AuthService {
     return await _handleAuthResponse(response, persistToken: true);
   }
 
+  /// Loggt einen User ein.
+  ///
+  /// POST /api/auth/login mit JSON Body (email ODER username erforderlich):
+  /// ```json
+  /// {"email": "user@example.com", "password": "secret"}
+  /// ```
+  /// oder
+  /// ```json
+  /// {"username": "user", "password": "secret"}
+  /// ```
+  ///
+  /// Token wird automatisch im SecureStorage gespeichert.
+  ///
+  /// Throws [AuthException] bei fehlenden Credentials oder Login-Fehlern.
   Future<AuthResponse> login({
     required String password,
     String? email,
@@ -206,6 +239,12 @@ class AuthService {
     return await _handleAuthResponse(response, persistToken: true);
   }
 
+  /// Erneuert den aktuellen Auth-Token.
+  ///
+  /// POST /api/auth/refresh mit Authorization Header.
+  /// Token wird automatisch aus SecureStorage geladen und erneuert.
+  ///
+  /// Throws [AuthException] wenn kein Token gespeichert oder Refresh fehlschlägt.
   Future<AuthResponse> refreshToken() async {
     final token = await _storage.readToken();
     if (token == null) {
@@ -220,6 +259,12 @@ class AuthService {
     return await _handleAuthResponse(response, persistToken: true);
   }
 
+  /// Loggt den User aus und löscht Token + Username.
+  ///
+  /// POST /api/auth/logout mit Authorization Header.
+  /// Löscht Token und Username aus SecureStorage.
+  ///
+  /// Throws [AuthException] wenn kein Token gespeichert.
   Future<AuthResponse> logout() async {
     final token = await _storage.readToken();
     if (token == null) {
@@ -237,10 +282,16 @@ class AuthService {
     return result;
   }
 
+  /// Gibt den gespeicherten JWT-Token aus SecureStorage zurück.
+  ///
+  /// Gibt `null` zurück wenn kein Token vorhanden.
   Future<String?> getStoredToken() {
     return _storage.readToken();
   }
 
+  /// Gibt den gespeicherten Username aus SecureStorage zurück.
+  ///
+  /// Gibt `null` zurück wenn kein Username vorhanden.
   Future<String?> getStoredUsername() {
     return _storage.readUsername();
   }

@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_state_provider.dart';
 
+/// Quest-Log Bildschirm zeigt alle gescannten Objekte.
+///
+/// Zeigt alle Detection-Logs in einem responsiven Grid (2-4 Spalten).
+/// Jeder Eintrag zeigt: Objekt-Name, Confidence, Timestamp, XP.
 class QuestLogScreen extends ConsumerStatefulWidget {
   const QuestLogScreen({super.key});
 

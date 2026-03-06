@@ -38,16 +38,16 @@ class AppStateNotifier extends StateNotifier<AppState> {
   static const int _maxLogEntries = 200;
 
   /// Ändert das aktuelle Theme der Applikation.
-  ///
-  /// Parameter: [option] - Ein [AppThemeOption] Value (light, dark, system, etc.)
   void setTheme(AppThemeOption option) {
     state = state.copyWith(theme: option);
   }
 
+  /// Ändert das Detection-Model (YOLO, etc.).
   void setDetectionModel(DetectionModelOption option) {
     state = state.copyWith(detectionModel: option);
   }
 
+  /// Ändert den Detection-Focus (balanced, precision, speed).
   void setDetectionFocus(DetectionFocusOption option) {
     state = state.copyWith(detectionFocus: option);
   }

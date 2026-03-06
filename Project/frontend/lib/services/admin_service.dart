@@ -1,6 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+/// User-Model für Admin-Panel.
+///
+/// Repräsentiert einen User mit allen relevanten Daten:
+/// - id, username, email, role
+/// - level, xp (Game-Fortschritt)
+/// - isActive (Account-Status)
+/// - createdAt (Registration Datum)
 class User {
   final int id;
   final String username;
@@ -54,6 +61,9 @@ class User {
   }
 }
 
+/// Exception die bei Admin-API Fehlern geworfen wird.
+///
+/// Enthält eine Fehlermeldung und optional einen Error-Code vom Backend.
 class AdminException implements Exception {
   final String message;
   final String? code;
@@ -64,6 +74,15 @@ class AdminException implements Exception {
   String toString() => code == null ? message : '$code: $message';
 }
 
+/// Service für Admin-Panel Operationen.
+///
+/// Kommuniziert mit dem Backend `/api/admin` Endpoint (nur für Admin-Users).
+/// Features:
+/// - User-Liste abrufen (getAllUsers)
+/// - User bearbeiten (updateUser)
+/// - User löschen (deleteUser)
+/// - Server-Stats abrufen (getStats)
+/// - Admin-Logs abrufen (getLogs)
 class AdminService {
   AdminService({
     this.baseUrl = 'http://localhost:5000/api',
@@ -80,6 +99,14 @@ class AdminService {
     };
   }
 
+  /// Holt alle User aus der Datenbank.
+  ///
+  /// GET /api/admin/users
+  /// Benötigt Admin-Token.
+  ///
+  /// Gibt Liste aller User mit allen Daten (id, username, email, level, xp, role, etc.).
+  ///
+  /// Throws [AdminException] bei fehlenden Rechten oder Server-Fehlern.
   // Get all users
   Future<List<User>> getAllUsers(String token) async {
     try {
@@ -107,6 +134,14 @@ class AdminService {
     }
   }
 
+  /// Aktualisiert einen User.
+  ///
+  /// PUT /api/admin/users/:userId
+  /// Benötigt Admin-Token.
+  ///
+  /// Updates können alle User-Felder umfassen (username, email, role, level, xp, etc.).
+  ///
+  /// Throws [AdminException] bei fehlenden Rechten oder Server-Fehlern.
   // Update user
   Future<void> updateUser(
     String token,
@@ -132,6 +167,14 @@ class AdminService {
     }
   }
 
+  /// Löscht einen User.
+  ///
+  /// DELETE /api/admin/users/:userId
+  /// Benötigt Admin-Token.
+  ///
+  /// Entfernt User und alle zugehörigen Daten (Detection-Logs, Stats, etc.).
+  ///
+  /// Throws [AdminException] bei fehlenden Rechten oder Server-Fehlern.
   // Delete user
   Future<void> deleteUser(String token, int userId) async {
     try {
@@ -152,6 +195,14 @@ class AdminService {
     }
   }
 
+  /// Holt Server-Statistiken.
+  ///
+  /// GET /api/admin/stats
+  /// Benötigt Admin-Token.
+  ///
+  /// Gibt Map mit Stats zurück (User-Anzahl, Detection-Anzahl, etc.).
+  ///
+  /// Throws [AdminException] bei fehlenden Rechten oder Server-Fehlern.
   // Get admin statistics
   Future<Map<String, dynamic>> getStats(String token) async {
     try {
@@ -176,6 +227,14 @@ class AdminService {
     }
   }
 
+  /// Holt Admin-Action Logs.
+  ///
+  /// GET /api/admin/logs?limit=100&offset=0
+  /// Benötigt Admin-Token.
+  ///
+  /// Gibt Liste aller Admin-Aktionen zurück (User-Updates, Löschungen, etc.).
+  ///
+  /// Throws [AdminException] bei fehlenden Rechten oder Server-Fehlern.
   // Get admin action logs
   Future<List<Map<String, dynamic>>> getLogs(
     String token, {

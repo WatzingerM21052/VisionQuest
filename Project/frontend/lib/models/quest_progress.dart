@@ -19,25 +19,47 @@ class QuestProgress {
 
   /// Gesamt-Erfahrungspunkte des Spielers.
   final int totalXp;
+
+  /// Aktuelles Level (startet bei 1).
   final int level;
+
+  /// Konsekutive Tage mit mindestens einem Scan.
   final int streak;
+
+  /// Zeitpunkt des letzten erfolgreichen Scans (für Streak-Berechnung).
   final DateTime? lastCompletedDate;
 
+  /// Berechnet die XP am Start des aktuellen Levels.
+  ///
+  /// Beispiel: Level 3 startet bei 2000 XP (2 * 1000).
   int get currentLevelStartXp => (level - 1) * 1000;
 
+  /// Berechnet die XP die für das nächste Level benötigt werden.
+  ///
+  /// Beispiel: Level 3 benötigt 3000 XP zum Aufstieg.
   int get nextLevelXp => level * 1000;
 
+  /// Gibt die XP an die im aktuellen Level bereits gesammelt wurden.
   int get xpIntoCurrentLevel => totalXp - currentLevelStartXp;
 
+  /// Gibt die Gesamt-XP an die für das aktuelle Level benötigt werden.
+  ///
+  /// Standardmäßig 1000 XP pro Level.
   int get xpRequiredForCurrentLevel => nextLevelXp - currentLevelStartXp;
 
+  /// Berechnet den Fortschritt im aktuellen Level (0.0 - 1.0).
+  ///
+  /// Wird für die XP-Fortschrittsanzeige verwendet.
   double get levelProgress {
     if (xpRequiredForCurrentLevel <= 0) {
-      return 1;
+      return 1.0;
     }
-    return (xpIntoCurrentLevel / xpRequiredForCurrentLevel).clamp(0, 1);
+    return (xpIntoCurrentLevel / xpRequiredForCurrentLevel).clamp(0.0, 1.0);
   }
 
+  /// Erstellt eine Kopie mit optional geänderten Werten.
+  ///
+  /// [clearLastCompletedDate] kann verwendet werden um das Datum explizit zu löschen.
   QuestProgress copyWith({
     int? totalXp,
     int? level,

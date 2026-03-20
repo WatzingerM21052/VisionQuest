@@ -1,0 +1,824 @@
+<!DOCTYPE html><html><head>
+      <title>Projektdokumentation</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:///c:\Users\matth\.vscode\extensions\shd101wyy.markdown-preview-enhanced-0.8.20\crossnote\dependencies\katex\katex.min.css">
+      
+      
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <!-- The content below will be included at the end of the <head> element. --><script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script></head><body for="html-export">
+    
+    
+      <div class="crossnote markdown-preview  ">
+      
+<h1 id="visionquest--projektdokumentation">VisionQuest – Projektdokumentation </h1>
+<p><strong>Projekt:</strong> VisionQuest – AR-basierte Objekterkennungs-Quest-App<br>
+<strong>Version:</strong> 1.0.0<br>
+<strong>Stand:</strong> März 2026<br>
+<strong>Team:</strong> WatzingerM21052</p>
+<hr>
+<h2 id="inhaltsverzeichnis">Inhaltsverzeichnis </h2>
+<ol>
+<li><a href="#1-projektstart--schnell%C3%BCbersicht">Projektstart – Schnellübersicht</a></li>
+<li><a href="#2-installation--inbetriebnahme">Installation &amp; Inbetriebnahme</a>
+<ul>
+<li>2.1 <a href="#21-systemvoraussetzungen">Systemvoraussetzungen</a></li>
+<li>2.2 <a href="#22-backend-starten">Backend starten</a></li>
+<li>2.3 <a href="#23-frontend-starten">Frontend starten</a></li>
+<li>2.4 <a href="#24-python--yolo-optional">Python / YOLO (optional)</a></li>
+<li>2.5 <a href="#25-verbindung-pr%C3%BCfen">Verbindung prüfen</a></li>
+<li>2.6 <a href="#26-h%C3%A4ufige-probleme--l%C3%B6sungen">Häufige Probleme &amp; Lösungen</a></li>
+</ul>
+</li>
+<li><a href="#3-protokoll-sammlung">Protokoll-Sammlung</a></li>
+<li><a href="#4-meilenstein-plan-vs-tats%C3%A4chlicher-fortschritt">Meilenstein-Plan vs. tatsächlicher Fortschritt</a></li>
+<li><a href="#5-app-bedienung--schritt-f%C3%BCr-schritt">App-Bedienung – Schritt-für-Schritt</a>
+<ul>
+<li>5.1 <a href="#51-registrierung">Registrierung</a></li>
+<li>5.2 <a href="#52-login">Login</a></li>
+<li>5.3 <a href="#53-home-screen-dashboard">Home-Screen (Dashboard)</a></li>
+<li>5.4 <a href="#54-scanner--objekt-erkennen">Scanner – Objekt erkennen</a></li>
+<li>5.5 <a href="#55-reward-screen">Reward-Screen</a></li>
+<li>5.6 <a href="#56-quest-log">Quest-Log</a></li>
+<li>5.7 <a href="#57-einstellungen">Einstellungen</a></li>
+<li>5.8 <a href="#58-logout">Logout</a></li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="1-projektstart--schnellübersicht">1. Projektstart – Schnellübersicht </h2>
+<p>VisionQuest ist eine Flutter-App, die mit einer Kamera reale Objekte erkennt und dem Spieler dafür XP, Level-Aufstiege und Streak-Punkte vergibt. Die Erkennung läuft wahlweise über <strong>YOLO v11</strong> (Python) oder <strong>COCO-SSD</strong> (TensorFlow.js) im Express-Backend.</p>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>Frontend  (Flutter/Dart)  ←→  Backend  (Node.js/Express)  ←→  SQLite-DB
+                                    ↕
+                           YOLO v11 (Python) / COCO-SSD (TF.js)
+</code></pre><p><strong>Starten in zwei Schritten:</strong></p>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token comment"># Terminal 1 – Backend</span>
+<span class="token builtin class-name">cd</span> Project/backend <span class="token operator">&amp;&amp;</span> <span class="token function">npm</span> <span class="token function">install</span> <span class="token operator">&amp;&amp;</span> <span class="token function">npm</span> start
+
+<span class="token comment"># Terminal 2 – Frontend</span>
+<span class="token builtin class-name">cd</span> Project/frontend <span class="token operator">&amp;&amp;</span> flutter pub get <span class="token operator">&amp;&amp;</span> flutter run <span class="token parameter variable">-d</span> chrome
+</code></pre><hr>
+<h2 id="2-installation--inbetriebnahme">2. Installation &amp; Inbetriebnahme </h2>
+<h3 id="21-systemvoraussetzungen">2.1 Systemvoraussetzungen </h3>
+<table>
+<thead>
+<tr>
+<th>Komponente</th>
+<th>Mindestversion</th>
+<th>Hinweis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flutter SDK</td>
+<td>3.10.3</td>
+<td><code>flutter --version</code></td>
+</tr>
+<tr>
+<td>Dart</td>
+<td>3.0</td>
+<td>im Flutter SDK enthalten</td>
+</tr>
+<tr>
+<td>Node.js</td>
+<td>16 LTS</td>
+<td><code>node --version</code></td>
+</tr>
+<tr>
+<td>npm</td>
+<td>8</td>
+<td><code>npm --version</code></td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.13</td>
+<td>nur für YOLO; optional</td>
+</tr>
+<tr>
+<td>Ultralytics</td>
+<td>8.4.19</td>
+<td><code>pip install ultralytics==8.4.19</code></td>
+</tr>
+<tr>
+<td>Android SDK/Xcode</td>
+<td>aktuell</td>
+<td>nur für native Builds</td>
+</tr>
+<tr>
+<td>Betriebssystem</td>
+<td>Win 10/macOS 12/Ubuntu 20</td>
+<td>beliebig</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="22-backend-starten">2.2 Backend starten </h3>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token comment"># 1. In den Backend-Ordner wechseln</span>
+<span class="token builtin class-name">cd</span> Project/backend
+
+<span class="token comment"># 2. Node-Abhängigkeiten installieren (einmalig)</span>
+<span class="token function">npm</span> <span class="token function">install</span>
+
+<span class="token comment"># 3. (Optional) .env anlegen – falls nicht vorhanden</span>
+<span class="token comment">#    Folgende Werte sind die Standardwerte und können weggelassen werden:</span>
+<span class="token comment">#    PORT=5000</span>
+<span class="token comment">#    JWT_SECRET=visionquest_secret</span>
+<span class="token comment">#    VISION_YOLO_MODEL=yolo11n.pt</span>
+<span class="token comment">#    VISION_YOLO_CONF=0.20</span>
+<span class="token comment">#    VISION_YOLO_IMGSZ=640</span>
+
+<span class="token comment"># 4. Server starten</span>
+<span class="token function">npm</span> start
+<span class="token comment"># Alternativ im Entwicklermodus:</span>
+<span class="token comment"># npm run dev</span>
+
+<span class="token comment"># ✅ Erwartete Ausgabe:</span>
+<span class="token comment"># Server running on port 5000</span>
+<span class="token comment"># Database initialized successfully</span>
+</code></pre><p>Der Backend-Server ist danach erreichbar unter:<br>
+<code>http://localhost:5000</code></p>
+<p><strong>Backend-Tests ausführen:</strong></p>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token function">npm</span> <span class="token builtin class-name">test</span>              <span class="token comment"># Unit-Tests mit Jest</span>
+<span class="token function">npm</span> run test:watch    <span class="token comment"># Tests im Watch-Modus</span>
+</code></pre><hr>
+<h3 id="23-frontend-starten">2.3 Frontend starten </h3>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token comment"># 1. In den Frontend-Ordner wechseln</span>
+<span class="token builtin class-name">cd</span> Project/frontend
+
+<span class="token comment"># 2. Flutter-Abhängigkeiten installieren (einmalig)</span>
+flutter pub get
+
+<span class="token comment"># 3. Code-Qualität prüfen</span>
+flutter analyze
+<span class="token comment"># ✅ Erwartete Ausgabe: "No issues found!"</span>
+
+<span class="token comment"># 4. App starten – Plattform wählen:</span>
+
+<span class="token comment"># Web (empfohlen für schnelles Testen)</span>
+flutter run <span class="token parameter variable">-d</span> chrome
+
+<span class="token comment"># Android-Emulator (muss gestartet sein)</span>
+flutter run <span class="token parameter variable">-d</span> emulator-5554
+
+<span class="token comment"># iOS-Simulator (nur macOS)</span>
+flutter run <span class="token parameter variable">-d</span> iphone
+
+<span class="token comment"># Windows Desktop</span>
+flutter run <span class="token parameter variable">-d</span> windows
+
+<span class="token comment"># Alle verfügbaren Geräte anzeigen</span>
+flutter devices
+</code></pre><blockquote>
+<p><strong>Hinweis:</strong> Bei einem <strong>Android-Emulator</strong> oder <strong>physischen Gerät</strong> muss die Backend-IP angepasst werden.<br>
+In <code>frontend/lib/main.dart</code> den <code>baseUrl</code>-Wert ändern:</p>
+<ul>
+<li>Android Emulator: <code>http://10.0.2.2:5000/api</code></li>
+<li>Physisches Gerät: <code>http://&lt;DEINE-LAN-IP&gt;:5000/api</code></li>
+<li>Web / Desktop: <code>http://localhost:5000/api</code></li>
+</ul>
+</blockquote>
+<p><strong>Release-Build erstellen:</strong></p>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token comment"># Android APK</span>
+flutter build apk <span class="token parameter variable">--release</span>
+
+<span class="token comment"># Web</span>
+flutter build web <span class="token parameter variable">--release</span> --web-renderer canvaskit
+
+<span class="token comment"># Windows</span>
+flutter build windows <span class="token parameter variable">--release</span>
+</code></pre><hr>
+<h3 id="24-python--yolo-optional">2.4 Python / YOLO (optional) </h3>
+<p>YOLO v11 erhöht die Erkennungsgenauigkeit erheblich. Das Backend fällt automatisch auf COCO-SSD zurück, wenn Python nicht gefunden wird.</p>
+<pre data-role="codeBlock" data-info="bash" class="language-bash bash"><code><span class="token comment"># Python-Paket installieren</span>
+pip <span class="token function">install</span> <span class="token assign-left variable">ultralytics</span><span class="token operator">==</span><span class="token number">8.4</span>.19
+
+<span class="token comment"># Installation prüfen</span>
+python <span class="token parameter variable">-c</span> <span class="token string">"from ultralytics import YOLO; print('YOLO OK')"</span>
+
+<span class="token comment"># Modell vorab herunterladen (optional; ~6 MB)</span>
+<span class="token comment"># Sonst erfolgt der Download automatisch beim ersten Scan</span>
+python <span class="token parameter variable">-c</span> <span class="token string">"from ultralytics import YOLO; YOLO('yolo11n.pt')"</span>
+</code></pre><p><strong>Umgebungsvariablen für das Backend (<code>.env</code>):</strong></p>
+<pre data-role="codeBlock" data-info="env" class="language-env env"><code>VISION_YOLO_MODEL=yolo11n.pt   # Modell-Datei
+VISION_YOLO_CONF=0.20          # Konfidenz-Schwellwert
+VISION_YOLO_IMGSZ=640          # Eingangsbildgröße
+</code></pre><hr>
+<h3 id="25-verbindung-prüfen">2.5 Verbindung prüfen </h3>
+<p>Beim App-Start prüft das Frontend automatisch die Backend-Verbindung und zeigt einen farbigen Status:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Bedeutung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>✅ Grün</td>
+<td>Backend erreichbar – alles OK</td>
+</tr>
+<tr>
+<td>❌ Rot</td>
+<td>Backend nicht erreichbar</td>
+</tr>
+</tbody>
+</table>
+<p>Mit dem Button <strong>„Verbindung testen"</strong> kann die Prüfung jederzeit wiederholt werden.</p>
+<hr>
+<h3 id="26-häufige-probleme--lösungen">2.6 Häufige Probleme &amp; Lösungen </h3>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Ursache</th>
+<th>Lösung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>npm: command not found</code></td>
+<td>Node.js nicht installiert</td>
+<td>Node.js von <a href="http://nodejs.org">nodejs.org</a> installieren</td>
+</tr>
+<tr>
+<td>Port 5000 belegt</td>
+<td>Anderer Prozess</td>
+<td><code>.env</code>: <code>PORT=3001</code> setzen und <code>baseUrl</code> im Frontend anpassen</td>
+</tr>
+<tr>
+<td><code>flutter: command not found</code></td>
+<td>Flutter nicht im PATH</td>
+<td>Flutter SDK zur PATH-Variable hinzufügen</td>
+</tr>
+<tr>
+<td><code>flutter pub get</code> schlägt fehl</td>
+<td>kein Internet / pub.dev nicht erreichbar</td>
+<td>VPN prüfen oder <code>flutter pub cache repair</code></td>
+</tr>
+<tr>
+<td>App baut, zeigt aber leeren Screen</td>
+<td>Backend läuft nicht</td>
+<td><code>npm start</code> im Backend-Ordner ausführen</td>
+</tr>
+<tr>
+<td>YOLO schlägt fehl</td>
+<td>Python nicht in PATH</td>
+<td><code>python --version</code> testen; Fallback auf COCO-SSD aktiv</td>
+</tr>
+<tr>
+<td>Kamera funktioniert nicht (Web)</td>
+<td>Browser-Berechtigung fehlt</td>
+<td>Browser → Kamera-Erlaubnis erteilen</td>
+</tr>
+<tr>
+<td>Android Emulator erreicht Backend nicht</td>
+<td>IP-Adresse falsch</td>
+<td><code>baseUrl</code> auf <code>http://10.0.2.2:5000/api</code> setzen</td>
+</tr>
+<tr>
+<td><code>flutter analyze</code> zeigt Fehler</td>
+<td>Code-Probleme</td>
+<td><code>flutter clean &amp;&amp; flutter pub get</code> ausführen</td>
+</tr>
+<tr>
+<td>Lottie-Animation lädt nicht</td>
+<td>Kein Internet / CDN-Fehler</td>
+<td>Fallback auf Material-Icons aktiv – kein Handlungsbedarf</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-protokoll-sammlung">3. Protokoll-Sammlung </h2>
+<h3 id="wochenprotokoll--30012026">Wochenprotokoll – 30.01.2026 </h3>
+<p><strong>Was wurde gemacht?</strong><br>
+Erstellung des Repositorys und der Ordnerstruktur sowie Start des Projektkonzepts inklusive erster Mockups.</p>
+<p><strong>Zeitplan:</strong><br>
+Gut im Zeitplan, da ein Großteil des Konzepts bereits vor den Semesterferien erstellt wurde.</p>
+<hr>
+<h3 id="wochenprotokoll--20022026-meilenstein-m1">Wochenprotokoll – 20.02.2026 (Meilenstein M1) </h3>
+<p><strong>Was wurde gemacht?</strong><br>
+Initialisierung der Flutter-Projektstruktur, Konfiguration des Express.js Backends mit CORS sowie Definition des SQLite-Schemas mit vier Tabellen (users, quests, user_stats, achievements).</p>
+<p><strong>Zeitplan:</strong><br>
+Im Plan; alle initialen Setup-Tasks und die Basis-Infrastruktur wurden abgeschlossen.</p>
+<p><strong>KI-Einsatz:</strong><br>
+Nutzung von GitHub Copilot (GPT-4) für Strukturvorschläge, Try-Catch-Patterns bei API-Antworten und die Erstellung eines <code>/api/health</code> Test-Endpunkts.</p>
+<hr>
+<h3 id="wochenprotokoll--27022026-meilenstein-m2">Wochenprotokoll – 27.02.2026 (Meilenstein M2) </h3>
+<p><strong>Was wurde gemacht?</strong><br>
+Implementierung von CRUD-Operationen für User und Quests, Definition von 13 REST-API Endpunkten sowie Integration von JWT-Authentication und Passwort-Hashing (bcryptjs).</p>
+<p><strong>Zeitplan:</strong><br>
+Gut im Zeitplan; alle für den 02.03. geplanten Tasks wurden vorzeitig abgeschlossen.</p>
+<p><strong>KI-Einsatz:</strong><br>
+GitHub Copilot half bei der Standardisierung des Error-Handlings, der Fehlerbehebung bei der JWT-Validierung und der Logik zur Vermeidung doppelter Benutzerregistrierungen.</p>
+<hr>
+<h3 id="wochenprotokoll--06032026-meilenstein-m5">Wochenprotokoll – 06.03.2026 (Meilenstein M5) </h3>
+<p><strong>Was wurde gemacht?</strong><br>
+Integration des camera-Plugins in Flutter, Implementierung des Live-Preview-Screens und des Bild-Uploads an den Backend-Endpunkt <code>/api/detect</code>. Das Backend wurde um einen asynchronen Python-Subprozess zur Bildverarbeitung erweitert.</p>
+<p><strong>Zeitplan:</strong><br>
+Im Plan; die Kernfunktionalität für Computer Vision ist einsatzbereit.</p>
+<p><strong>KI-Einsatz:</strong><br>
+Unterstützung durch Copilot bei Kamera-Berechtigungen (Android/iOS), der korrekten Darstellung der Preview via AspectRatio und der Integration des Python-Scripts in Node.js mittels <code>child_process.spawn</code>.</p>
+<hr>
+<h3 id="wochenprotokoll--13032026-meilenstein-m6m7m8">Wochenprotokoll – 13.03.2026 (Meilenstein M6+M7+M8) </h3>
+<p><strong>Was wurde gemacht?</strong><br>
+Vollständige Implementierung aller 6 Screens, zentralisiertes Routing, Integration von Riverpod für das State Management sowie Einbau von 5 Themes und der Quest-Logik (XP, Level, Streak). Zudem wurden Lottie/Rive Animationen hinzugefügt.</p>
+<p><strong>Zeitplan:</strong><br>
+Im Plan; alle Ziele für UI, Navigation, State und Themes wurden termingerecht zum Projektabschluss erreicht.</p>
+<p><strong>KI-Einsatz:</strong><br>
+Einsatz von GitHub Copilot (GPT-5.3-Codex) für das Named-Routing, zentrale Provider-Strukturen, Berechnungsregeln für die Quest-Logik und ein sicheres Code-Cleanup.</p>
+<hr>
+<h2 id="4-meilenstein-plan-vs-tatsächlicher-fortschritt">4. Meilenstein-Plan vs. tatsächlicher Fortschritt </h2>
+<table>
+<thead>
+<tr>
+<th>Meilenstein</th>
+<th>Geplante Funktionalität</th>
+<th>Deadline (Soll)</th>
+<th>Status (Ist)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1</td>
+<td>Projektplanung &amp; Initialisierung (Git, Konzept, Mockups)</td>
+<td>10.02.2026</td>
+<td>✅ Abgeschlossen (30.01.)</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>Projekt-Init (Flutter Struktur, Express Boilerplate)</td>
+<td>27.02.2026</td>
+<td>✅ Abgeschlossen (20.02.)</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Datenbank &amp; API (SQLite Schema, CRUD, Endpunkte)</td>
+<td>02.03.2026</td>
+<td>✅ Abgeschlossen (27.02.)</td>
+</tr>
+<tr>
+<td>M4</td>
+<td>Authentication (Login/Register UI, JWT, Session)</td>
+<td>04.03.2026</td>
+<td>✅ Abgeschlossen (27.02.)</td>
+</tr>
+<tr>
+<td>M5</td>
+<td>Scanner &amp; Computer Vision (Kamera, Upload, Detection)</td>
+<td>06.03.2026</td>
+<td>✅ Abgeschlossen (06.03.)</td>
+</tr>
+<tr>
+<td>M6</td>
+<td>UI &amp; Navigation (Alle 6 Screens, Responsive Layout)</td>
+<td>09.03.2026</td>
+<td>✅ Abgeschlossen (13.03.)</td>
+</tr>
+<tr>
+<td>M7</td>
+<td>State &amp; Theme (Riverpod, 5 Themes, Quest-Logik)</td>
+<td>11.03.2026</td>
+<td>✅ Abgeschlossen (13.03.)</td>
+</tr>
+<tr>
+<td>M8</td>
+<td>Finale Abgabe &amp; Dokumentation</td>
+<td>13.03.2026</td>
+<td>✅ Termingerecht</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fazit zum Fortschritt:</strong><br>
+Das Projekt konnte exakt im vorgegebenen Zeitrahmen abgeschlossen werden. Während die Backend-Entwicklung und Datenbankstruktur (M3, M4) dem Plan voraus waren, lag der Fokus in der letzten Woche auf der Finalisierung der UI-Komplexität und dem globalen State Management (M6, M7). Alle im ursprünglichen Konzept definierten Anforderungen – von der JWT-Authentifizierung bis zum variablen Theme-System – wurden vollständig umgesetzt.</p>
+<hr>
+<h2 id="5-app-bedienung--schritt-für-schritt">5. App-Bedienung – Schritt-für-Schritt </h2>
+<h3 id="51-registrierung">5.1 Registrierung </h3>
+<p>Die App startet direkt auf dem <strong>Login-Screen</strong>. Neue Nutzer wählen „Registrieren".</p>
+<p><strong>Schritte:</strong></p>
+<ol>
+<li>App öffnen → Login-Screen erscheint</li>
+<li>Auf <strong>„Registrieren"</strong> tippen (Link am unteren Bildschirmrand)</li>
+<li>Felder ausfüllen:
+<ul>
+<li><code>Benutzername</code> – frei wählbar, eindeutig</li>
+<li><code>E-Mail</code> – gültige E-Mail-Adresse</li>
+<li><code>Passwort</code> – mindestens 6 Zeichen</li>
+</ul>
+</li>
+<li>Auf <strong>„Registrieren"</strong> drücken</li>
+<li>Bei Erfolg → automatische Weiterleitung zum <strong>Home-Screen</strong></li>
+</ol>
+<p><img src="Screenshots\RegistrierScreen.png" alt="Registrierung"></p>
+<blockquote>
+<p><strong>Hinweis:</strong> Bei Fehlern (doppelte E-Mail, kurzes Passwort) erscheint eine Fehlermeldung direkt unter dem betroffenen Feld.</p>
+</blockquote>
+<hr>
+<h3 id="52-login">5.2 Login </h3>
+<p><strong>Schritte:</strong></p>
+<ol>
+<li>App öffnen → Login-Screen erscheint</li>
+<li><code>E-Mail</code> und <code>Passwort</code> eingeben</li>
+<li>Auf <strong>„Anmelden"</strong> tippen</li>
+<li>Bei Erfolg → Weiterleitung zum <strong>Home-Screen</strong></li>
+</ol>
+<p><img src="Screenshots\LoginScreen.png" alt="Login"></p>
+<blockquote>
+<p><strong>Tipp:</strong> Das Auth-Token wird sicher gespeichert. Bei erneutem Öffnen der App muss nicht erneut eingeloggt werden, solange die Session aktiv ist.</p>
+</blockquote>
+<hr>
+<h3 id="53-home-screen-dashboard">5.3 Home-Screen (Dashboard) </h3>
+<p>Der Home-Screen ist die zentrale Übersicht. Er zeigt den aktuellen Spielstand.</p>
+<p><img src="Screenshots\HomeScreen.png" alt="Home-Screen"></p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Beschreibung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Begrüßung</td>
+<td>Personalisiert mit eingeloggtem Benutzernamen</td>
+</tr>
+<tr>
+<td>Level-Karte</td>
+<td>Zeigt aktuelles Level, XP-Fortschrittsbalken (mit Glow-Effekt)</td>
+</tr>
+<tr>
+<td>Streak-Anzeige</td>
+<td>Animiertes 🔥-Icon mit Pulse-Effekt; zeigt konsekutive Tage</td>
+</tr>
+<tr>
+<td>Tagesquest</td>
+<td>Heute aktive Quest mit Fortschrittsanzeige; wechselt täglich</td>
+</tr>
+<tr>
+<td>Statistiken</td>
+<td><strong>Gescannt</strong> = alle Scans, <strong>Gefunden</strong> = erfolgreiche Erkennungen</td>
+</tr>
+<tr>
+<td>Buttons</td>
+<td>Navigation zu Scanner, Quest-Log und Einstellungen</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Daily Quest:</strong> Die aktive Quest wechselt täglich und rotiert durch 6 Quests (Handy, Personen, Tasse, Buch, Alltagsobjekte, Technik). Der Fortschritt wird automatisch aus dem Quest-Log berechnet.</p>
+</blockquote>
+<hr>
+<h3 id="54-scanner--objekt-erkennen">5.4 Scanner – Objekt erkennen </h3>
+<p>Der Scanner-Screen zeigt das Live-Kamerabild mit einem Fokus-Kreis.</p>
+<p><strong>Schritte:</strong></p>
+<ol>
+<li>Auf <strong>„Jetzt scannen"</strong> tippen</li>
+<li>Kameraberechtigung bestätigen (beim ersten Mal)</li>
+<li>Objekt <strong>in den Fokus-Kreis</strong> richten</li>
+<li>Auf <strong>„Scannen"</strong> tippen</li>
+<li>Kurze Analyse-Phase (Lottie-Spinner sichtbar)</li>
+<li>Weiterleitung zum <strong>Reward-Screen</strong> bei Erkennung</li>
+</ol>
+<p><img src="Screenshots\ScannerScreen.png" alt="Scanner"></p>
+<table>
+<thead>
+<tr>
+<th>Modus</th>
+<th>Beschreibung</th>
+<th>Empfohlen für</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Strict</strong></td>
+<td>Nur Objekte komplett im Kreis werden erkannt</td>
+<td>Klare, freistehende Objekte</td>
+</tr>
+<tr>
+<td><strong>Balanced</strong></td>
+<td>Auch teilweise außerhalb des Kreises sichtbare Objekte</td>
+<td>Große Objekte, schwierige Umgebungen</td>
+</tr>
+<tr>
+<td><strong>YOLO</strong></td>
+<td>Höhere Genauigkeit via Python/Ultralytics</td>
+<td>Standardmodus</td>
+</tr>
+<tr>
+<td><strong>COCO-SSD</strong></td>
+<td>Schneller, kein Python nötig</td>
+<td>Wenn YOLO nicht verfügbar</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Tipp:</strong> Den Fokus-Modus und das Erkennungsmodell kann man in den <strong>Einstellungen</strong> wechseln. Der aktive Modus wird als kleiner Chip am unteren Rand des Scanners angezeigt.</p>
+</blockquote>
+<blockquote>
+<p><strong>Kein Objekt erkannt?</strong> Stelle sicher, dass das Objekt deutlich im Kreis sichtbar ist und ausreichend beleuchtet. Wechsle ggf. auf „Balanced"-Modus.</p>
+</blockquote>
+<hr>
+<h3 id="55-reward-screen">5.5 Reward-Screen </h3>
+<p>Nach einer erfolgreichen Erkennung erscheint der Reward-Screen.</p>
+<p><img src="Screenshots\RewardScreen.png" alt="Reward-Screen"></p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Beschreibung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Animation</td>
+<td>Lottie-Feieranimation (fällt auf Material-Icon zurück, falls offline)</td>
+</tr>
+<tr>
+<td>Erkanntes Objekt</td>
+<td>Label des erkannten Objekts (englisch, aus COCO/YOLO Klassenliste)</td>
+</tr>
+<tr>
+<td>Konfidenz</td>
+<td>Erkennungssicherheit in Prozent</td>
+</tr>
+<tr>
+<td>XP-Vergabe</td>
+<td>Formel: <code>10 + (Konfidenz × 90)</code> → 10–100 XP</td>
+</tr>
+<tr>
+<td>Weiter-Button</td>
+<td>Zurück zum Home-Screen; State (XP, Level, Streak) wird aktualisiert</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>XP-Beispiele:</strong></p>
+<ul>
+<li>50 % Konfidenz → 55 XP</li>
+<li>80 % Konfidenz → 82 XP</li>
+<li>100 % Konfidenz → 100 XP</li>
+</ul>
+</blockquote>
+<hr>
+<h3 id="56-quest-log">5.6 Quest-Log </h3>
+<p>Der Quest-Log zeigt die vollständige Historie aller Scan-Ergebnisse.</p>
+<p><strong>Schritte:</strong></p>
+<ol>
+<li>Home-Screen → <strong>„Quest-Log"</strong> tippen</li>
+<li>Grid-Ansicht mit allen bisherigen Scans</li>
+</ol>
+<p><img src="Screenshots\QuestLogScreen.png" alt="Quest-Log"></p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Beschreibung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kachel</td>
+<td>Zeigt Objektname, Konfidenz-Balken, XP und Timestamp</td>
+</tr>
+<tr>
+<td>Konfidenz-Balken</td>
+<td>Visuell: leer (0 %) bis voll (100 %)</td>
+</tr>
+<tr>
+<td>Grid-Layout</td>
+<td>2 Spalten Mobile, 3+ Spalten Tablet/Desktop</td>
+</tr>
+<tr>
+<td>Leer-State</td>
+<td>Freundliche Nachricht, wenn noch keine Scans vorhanden</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Maximale Einträge:</strong> Der Log speichert bis zu 200 Einträge; ältere Einträge werden automatisch entfernt.</p>
+</blockquote>
+<hr>
+<h3 id="57-einstellungen">5.7 Einstellungen </h3>
+<p>Die Einstellungen ermöglichen die Anpassung von Theme, Erkennungsmodell und Fokus-Modus.</p>
+<p><strong>Schritte:</strong></p>
+<ol>
+<li>Home-Screen → <strong>„Einstellungen"</strong> tippen</li>
+</ol>
+<p><img src="Screenshots\SettingsScreen.png" alt="Einstellungen"></p>
+<p><strong>Themes im Überblick:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Theme</th>
+<th>Stil</th>
+<th>Primärfarbe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Light</td>
+<td>Hell, klassisch</td>
+<td>Lila <code>#5D4E8C</code></td>
+</tr>
+<tr>
+<td>Dark</td>
+<td>Dunkel, klassisch</td>
+<td>Lila <code>#5D4E8C</code></td>
+</tr>
+<tr>
+<td>System</td>
+<td>Folgt OS-Einstellung</td>
+<td>Lila <code>#5D4E8C</code></td>
+</tr>
+<tr>
+<td>RetroArcade</td>
+<td>Neon-Arcade-Look</td>
+<td>Cyan <code>#00C2FF</code></td>
+</tr>
+<tr>
+<td>AdventureMap</td>
+<td>Warm, rustikal</td>
+<td>Braun <code>#8B5E3C</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Hinweis:</strong> Das Theme gilt sofort und erfordert keinen App-Neustart.</p>
+</blockquote>
+<p><strong>Erkennungsmodell-Optionen:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Beschreibung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>YOLO</td>
+<td>YOLO v11 (Python), höhere Genauigkeit, benötigt Python</td>
+</tr>
+<tr>
+<td>COCO-SSD</td>
+<td>TensorFlow.js im Backend, schneller, kein Python nötig</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fokus-Optionen:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Kontext-Faktor</th>
+<th>Empfehlung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Strict</td>
+<td>1,35×</td>
+<td>Objekte klar sichtbar, freistehend</td>
+</tr>
+<tr>
+<td>Balanced</td>
+<td>1,85×</td>
+<td>Objekte teilweise verdeckt oder am Rand</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="58-logout">5.8 Logout </h3>
+<ol>
+<li>Home-Screen → <strong>„Einstellungen"</strong> tippen</li>
+<li>Am Ende der Seite <strong>„Abmelden"</strong> tippen</li>
+<li>Bestätigung → App leitet zum <strong>Login-Screen</strong> weiter</li>
+<li>Auth-Token und Session-Daten werden gelöscht</li>
+</ol>
+<blockquote>
+<p><strong>Hinweis:</strong> Nach dem Logout ist der gespeicherte Auth-Token ungültig. Beim nächsten Start der App erscheint wieder der Login-Screen.</p>
+</blockquote>
+<hr>
+<h2 id="anhang--technologieübersicht">Anhang – Technologieübersicht </h2>
+<h3 id="tech-stack">Tech Stack </h3>
+<table>
+<thead>
+<tr>
+<th>Bereich</th>
+<th>Technologie</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>Flutter</td>
+<td>3.10.3</td>
+</tr>
+<tr>
+<td>Sprache Frontend</td>
+<td>Dart</td>
+<td>3.0+</td>
+</tr>
+<tr>
+<td>State Management</td>
+<td>Riverpod (StateNotifier)</td>
+<td>2.6.1</td>
+</tr>
+<tr>
+<td>Design System</td>
+<td>Material You (useMaterial3)</td>
+<td>–</td>
+</tr>
+<tr>
+<td>Animationen</td>
+<td>Lottie + Flutter Built-in</td>
+<td>3.1.2</td>
+</tr>
+<tr>
+<td>Kamera</td>
+<td>camera</td>
+<td>0.11.0+2</td>
+</tr>
+<tr>
+<td>Secure Storage</td>
+<td>flutter_secure_storage</td>
+<td>9.2.4</td>
+</tr>
+<tr>
+<td>HTTP</td>
+<td>http</td>
+<td>1.6.0</td>
+</tr>
+<tr>
+<td>Backend Framework</td>
+<td>Express.js</td>
+<td>5.2.1</td>
+</tr>
+<tr>
+<td>Laufzeit Backend</td>
+<td>Node.js</td>
+<td>16+</td>
+</tr>
+<tr>
+<td>Datenbank</td>
+<td>SQLite3</td>
+<td>5.1.7</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>JWT (jsonwebtoken)</td>
+<td>9.0.3</td>
+</tr>
+<tr>
+<td>Passwort-Hashing</td>
+<td>bcryptjs</td>
+<td>3.0.3</td>
+</tr>
+<tr>
+<td>Bildverarbeitung</td>
+<td>Jimp</td>
+<td>0.22.10</td>
+</tr>
+<tr>
+<td>ML Modell 1</td>
+<td>YOLO v11 (Ultralytics)</td>
+<td>8.4.19</td>
+</tr>
+<tr>
+<td>ML Modell 2</td>
+<td>COCO-SSD (TensorFlow.js)</td>
+<td>2.2.3</td>
+</tr>
+<tr>
+<td>Tests (Backend)</td>
+<td>Jest + Supertest</td>
+<td>29.7.0</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>Dokumentation erstellt: März 2026</em></p>
+
+      </div>
+      
+      
+    
+    
+    
+    
+    
+    
+  
+    </body></html>
